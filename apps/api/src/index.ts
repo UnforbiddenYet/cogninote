@@ -2,6 +2,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import authRoutes from "./routes/auth";
+import notesRoutes from "./routes/notes";
+import tagsRoutes from "./routes/tags";
+import linksRoutes from "./routes/links";
+import searchRoutes from "./routes/search";
 
 const app = new Hono();
 
@@ -28,8 +32,12 @@ app.get("/", (c) => {
   });
 });
 
-// Auth routes
+// API routes
 app.route("/api/auth", authRoutes);
+app.route("/api/notes", notesRoutes);
+app.route("/api/tags", tagsRoutes);
+app.route("/api/links", linksRoutes);
+app.route("/api/search", searchRoutes);
 
 // Error handling
 app.onError((err, c) => {
