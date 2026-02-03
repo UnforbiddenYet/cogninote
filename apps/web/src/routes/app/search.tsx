@@ -54,40 +54,51 @@ function SearchPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="mb-4 text-3xl font-bold text-foreground">Search Notes</h1>
+        <h1 className="text-4xl font-bold text-foreground mb-2">Search</h1>
+        <p className="text-muted mb-6">Find notes across your knowledge base</p>
+
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes..."
-            className="flex-1 rounded border border-border bg-background px-4 py-2 text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Search by title or content..."
+            className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           />
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary"
+            className="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
             {loading ? "Searching..." : "Search"}
           </button>
         </form>
       </div>
 
-      {searched && (
+      {searched && results.length > 0 && (
         <div>
-          <p className="mb-4 text-sm text-muted">
-            Found {results.length} result{results.length !== 1 ? "s" : ""} for "
-            {query}"
-          </p>
+          <div className="mb-6">
+            <p className="text-sm text-muted">
+              Found <span className="text-foreground font-semibold">{results.length}</span> result{results.length !== 1 ? "s" : ""} for <span className="text-primary font-semibold">"{query}"</span>
+            </p>
+          </div>
           <NoteList notes={results} loading={false} />
         </div>
       )}
 
+      {searched && results.length === 0 && (
+        <div className="rounded-xl border border-border bg-background/50 p-12 text-center">
+          <p className="text-muted">No notes found for "<span className="text-foreground font-semibold">{query}</span>"</p>
+          <p className="text-sm text-muted mt-2">Try different keywords or browse your notes</p>
+        </div>
+      )}
+
       {!searched && (
-        <div className="card text-center text-muted">
-          Enter a search query to find notes
+        <div className="rounded-xl border border-dashed border-border bg-background/50 p-12 text-center">
+          <p className="text-muted">Enter a search query above to find notes</p>
+          <p className="text-sm text-muted mt-2">Search by title, content, tags, or any text</p>
         </div>
       )}
     </div>

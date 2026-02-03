@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { NoteList } from "../../../components/notes/NoteList";
 
 export const Route = createFileRoute("/app/notes/")({
@@ -57,14 +58,18 @@ function NotesPage() {
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Notes</h1>
+        <div>
+          <h1 className="text-4xl font-bold text-foreground">Notes</h1>
+          <p className="text-muted mt-1">Your personal note collection</p>
+        </div>
         <button
           onClick={() => navigate({ to: "/app/notes/new" })}
-          className="btn-primary"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
         >
-          + New Note
+          <Plus className="w-4 h-4" />
+          New Note
         </button>
       </div>
 
