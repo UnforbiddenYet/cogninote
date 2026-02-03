@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "bun run --hot src/index.ts",
     "build": "tsc && bun build src/index.ts --outfile build/index.js",
-    "start": "node build/index.js",
+    "start": "bun src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src tests",
     "test": "bun test",
