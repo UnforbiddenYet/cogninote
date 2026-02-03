@@ -26,13 +26,14 @@ function AppLayout() {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-0"
-        } border-r border-border bg-background transition-all duration-200 overflow-hidden flex flex-col`}
+        className={`${sidebarOpen ? "w-64" : "w-0"
+          } border-r border-border bg-background transition-all duration-200 overflow-hidden flex flex-col`}
       >
         {/* Logo */}
         <div className="border-b border-border p-4">
-          <h1 className="text-lg font-bold text-primary">MindGraph</h1>
+          <Link to="/app">
+            <h1 className="text-lg font-bold text-primary">MindGraph</h1>
+          </Link>
           <p className="text-xs text-muted">Knowledge Graph</p>
         </div>
 
