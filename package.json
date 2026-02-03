@@ -1,0 +1,26 @@
+{
+  "name": "mindgraph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-Powered Personal Knowledge Graph",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --cwd apps/api run dev & bun --cwd apps/web run dev",
+    "build": "bun --cwd apps/api run build && bun --cwd apps/web run build",
+    "lint": "biome check . --apply-unsafe",
+    "format": "biome format . --write",
+    "type-check": "bun run --filter '*' typecheck",
+    "db:push": "bun --cwd apps/api run db:push",
+    "db:generate": "bun --cwd apps/api run db:generate",
+    "db:studio": "bun --cwd apps/api run db:studio",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.0",
+    "typescript": "^5.3.0"
+  }
+}

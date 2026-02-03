@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: mindgraph_postgres
+    environment:
+      POSTGRES_USER: mindgraph_user
+      POSTGRES_PASSWORD: mindgraph_password
+      POSTGRES_DB: mindgraph_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindgraph_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
