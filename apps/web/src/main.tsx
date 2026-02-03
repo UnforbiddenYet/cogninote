@@ -1,10 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { routeTree } from './src/routeTree.gen'
-import './src/styles/tailwind.css'
+import { RootRoute, Router, RouterProvider } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
 
-const router = createRouter({ routeTree })
+const router = new Router({ routeTree })
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -15,5 +14,5 @@ declare module '@tanstack/react-router' {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>
+  </React.StrictMode>,
 )
