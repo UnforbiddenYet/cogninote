@@ -9,14 +9,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun --cwd apps/api run dev & bun --cwd apps/web run dev",
-    "build": "bun --cwd apps/api run build && bun --cwd apps/web run build",
+    "dev": "bun run --cwd apps/api dev & bun run --cwd apps/web dev",
+    "build": "bun run --cwd apps/api build && bun run --cwd apps/web build",
     "lint": "biome check . --apply-unsafe",
     "format": "biome format . --write",
     "type-check": "bun run --filter '*' typecheck",
-    "db:push": "bun --cwd apps/api run db:push",
-    "db:generate": "bun --cwd apps/api run db:generate",
-    "db:studio": "bun --cwd apps/api run db:studio",
+    "db:push": "bun run --cwd apps/api db:push",
+    "db:generate": "bun run --cwd apps/api db:generate",
+    "db:studio": "bun run --cwd apps/api db:studio",
     "test": "bun test"
   },
   "devDependencies": {

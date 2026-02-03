@@ -7,8 +7,8 @@ export default defineConfig({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
-      routesDirectory: "./app/routes",
-      generatedRouteTree: "./app/routeTree.gen.ts",
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/routeTree.gen.ts",
     }),
     react(),
   ],
@@ -17,8 +17,6 @@ export default defineConfig({
     cors: true,
   },
   define: {
-    __API_URL__: JSON.stringify(
-      process.env.API_URL || "http://localhost:3001"
-    ),
+    __API_URL__: JSON.stringify(process.env.API_URL || "http://localhost:3001"),
   },
 });
