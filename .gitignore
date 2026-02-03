@@ -9,6 +9,9 @@ dist/
 .next/
 out/
 
+# Generated files
+**/*routeTree.gen.ts
+
 # Environment variables (but not .env.example)
 .env
 .env.local

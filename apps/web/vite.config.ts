@@ -1,15 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+      routesDirectory: "./app/routes",
+      generatedRouteTree: "./app/routeTree.gen.ts",
+    }),
+    react(),
+  ],
   server: {
     port: 3000,
     cors: true,
   },
   define: {
-    "import.meta.env.VITE_API_URL": JSON.stringify(
-      process.env.VITE_API_URL || "http://localhost:3001"
+    __API_URL__: JSON.stringify(
+      process.env.API_URL || "http://localhost:3001"
     ),
   },
 });
