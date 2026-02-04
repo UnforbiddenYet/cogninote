@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -49,6 +50,28 @@ export const users = pgTable(
   })
 );
 
+// Folders table
+export const folders = pgTable(
+  "folders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    color: varchar("color", { length: 7 }),
+    icon: varchar("icon", { length: 50 }),
+    position: integer("position").default(0).notNull(),
+    isExpanded: boolean("is_expanded").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("idx_folders_user_id").on(table.userId),
+    positionIdx: index("idx_folders_position").on(table.userId, table.position),
+  })
+);
+
 // Notes table
 export const notes = pgTable(
   "notes",
@@ -57,6 +80,7 @@ export const notes = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    folderId: uuid("folder_id").references(() => folders.id, { onDelete: "set null" }),
     title: varchar("title", { length: 512 }).notNull(),
     content: text("content").notNull(),
     contentPlain: text("content_plain").notNull(),
@@ -68,6 +92,7 @@ export const notes = pgTable(
   },
   (table) => ({
     userIdIdx: index("idx_notes_user_id").on(table.userId),
+    folderIdIdx: index("idx_notes_folder_id").on(table.folderId),
     updatedAtIdx: index("idx_notes_updated_at").on(table.updatedAt),
   })
 );
@@ -176,6 +201,7 @@ export const sessions = pgTable(
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
+  folders: many(folders),
   notes: many(notes),
   tags: many(tags),
   links: many(links),
@@ -185,6 +211,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const notesRelations = relations(notes, ({ one, many }) => ({
   user: one(users, { fields: [notes.userId], references: [users.id] }),
+  folder: one(folders, { fields: [notes.folderId], references: [folders.id] }),
   tags: many(noteTags),
   sourceLinks: many(links, { relationName: "source" }),
   targetLinks: many(links, { relationName: "target" }),
@@ -194,6 +221,11 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
 export const tagsRelations = relations(tags, ({ one, many }) => ({
   user: one(users, { fields: [tags.userId], references: [users.id] }),
   notes: many(noteTags),
+}));
+
+export const foldersRelations = relations(folders, ({ one, many }) => ({
+  user: one(users, { fields: [folders.userId], references: [users.id] }),
+  notes: many(notes),
 }));
 
 export const noteTagsRelations = relations(noteTags, ({ one }) => ({

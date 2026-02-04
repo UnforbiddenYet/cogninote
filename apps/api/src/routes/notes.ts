@@ -6,6 +6,7 @@ import {
   listNotes,
   updateNote,
   deleteNote,
+  getUncategorizedNotes,
 } from "../services/notes";
 import { getRelatedNotes } from "../services/links";
 import { requireAuth } from "../lib/middleware/auth";
@@ -16,6 +17,7 @@ const createNoteSchema = z.object({
   title: z.string().min(1, "Title required"),
   content: z.string().min(1, "Content required"),
   color: z.string().optional(),
+  folderId: z.string().uuid().optional(),
 });
 
 const updateNoteSchema = z.object({
@@ -23,6 +25,26 @@ const updateNoteSchema = z.object({
   content: z.string().min(1).optional(),
   color: z.string().optional(),
   isArchived: z.boolean().optional(),
+  folderId: z.string().uuid().nullable().optional(),
+});
+
+// GET /api/notes/uncategorized
+app.get("/uncategorized", requireAuth(), async (c: any) => {
+  try {
+    const userId = c.get("userId");
+    const limit = Math.min(parseInt(c.req.query("limit") || "100"), 100);
+    const offset = parseInt(c.req.query("offset") || "0");
+
+    const { notes, total } = await getUncategorizedNotes(userId, limit, offset);
+
+    return c.json({
+      success: true,
+      data: { notes, total, limit, offset },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to list uncategorized notes";
+    return c.json({ success: false, error: message }, 500);
+  }
 });
 
 // GET /api/notes

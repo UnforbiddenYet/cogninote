@@ -6,6 +6,7 @@ import notesRoutes from "./routes/notes";
 import tagsRoutes from "./routes/tags";
 import linksRoutes from "./routes/links";
 import searchRoutes from "./routes/search";
+import foldersRoutes from "./routes/folders";
 
 const app = new Hono();
 
@@ -38,6 +39,7 @@ app.route("/api/notes", notesRoutes);
 app.route("/api/tags", tagsRoutes);
 app.route("/api/links", linksRoutes);
 app.route("/api/search", searchRoutes);
+app.route("/api/folders", foldersRoutes);
 
 // Error handling
 app.onError((err, c) => {

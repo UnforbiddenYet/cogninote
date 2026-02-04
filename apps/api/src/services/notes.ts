@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, isNull } from "drizzle-orm";
 import { db } from "../db";
 import { notes, noteTags, tags } from "../db/schema";
 
@@ -6,6 +6,7 @@ type CreateNoteInput = {
   title: string;
   content: string;
   color?: string;
+  folderId?: string;
 };
 
 type UpdateNoteInput = {
@@ -13,6 +14,7 @@ type UpdateNoteInput = {
   content?: string;
   color?: string;
   isArchived?: boolean;
+  folderId?: string | null;
 };
 
 type Note = {
@@ -40,6 +42,7 @@ export async function createNote(
     .insert(notes)
     .values({
       userId,
+      folderId: input.folderId || null,
       title: input.title,
       content: input.content,
       contentPlain,
@@ -179,6 +182,7 @@ export async function updateNote(
   }
   if (input.color !== undefined) updateData.color = input.color;
   if (input.isArchived !== undefined) updateData.isArchived = input.isArchived;
+  if (input.folderId !== undefined) updateData.folderId = input.folderId || null;
 
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
@@ -198,4 +202,58 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
     .where(eq(notes.id, noteId));
 
   return true;
+}
+
+export async function getUncategorizedNotes(
+  userId: string,
+  limit = 20,
+  offset = 0
+): Promise<{ notes: Note[]; total: number }> {
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), isNull(notes.folderId)));
+
+  const total = countResult[0]?.count || 0;
+
+  const result = await db
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), isNull(notes.folderId)))
+    .orderBy(desc(notes.updatedAt))
+    .limit(limit)
+    .offset(offset);
+
+  const notesList = await Promise.all(
+    result.map(async (note) => {
+      const noteTags_ = await db
+        .select({
+          id: tags.id,
+          name: tags.name,
+          color: tags.color,
+        })
+        .from(noteTags)
+        .innerJoin(tags, eq(noteTags.tagId, tags.id))
+        .where(eq(noteTags.noteId, note.id));
+
+      return {
+        id: note.id,
+        userId: note.userId,
+        title: note.title,
+        content: note.content,
+        color: note.color || undefined,
+        isArchived: note.isArchived,
+        summary: note.summary || undefined,
+        createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
+        tags: noteTags_.map((t) => ({
+          id: t.id,
+          name: t.name,
+          color: t.color || undefined,
+        })),
+      };
+    })
+  );
+
+  return { notes: notesList, total };
 }

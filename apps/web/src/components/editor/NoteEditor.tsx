@@ -53,11 +53,10 @@ function FloatingToolbar({
     <button
       onClick={onClick}
       title={title}
-      className={`p-2 rounded-md transition-all duration-150 ${
-        isActive
+      className={`p-2 rounded-md transition-all duration-150 ${isActive
           ? "bg-blue-100 text-blue-600"
           : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-      }`}
+        }`}
     >
       <Icon size={16} strokeWidth={2} />
     </button>
@@ -228,7 +227,6 @@ export function NoteEditor({
               {hasUnsavedChanges ? "Unsaved changes" : `Saved ${formatDistanceToNow(lastSaved, { addSuffix: true })}`}
             </span>
           )}
-          {!saving && !lastSaved && <span className="text-gray-400">Ready to save</span>}
         </div>
 
         {/* Editor Content */}
