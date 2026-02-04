@@ -12,18 +12,19 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@tanstack/react-router": "^1.0.0",
     "@tanstack/react-query": "^5.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@xyflow/react": "^12.2.0",
+    "@tanstack/react-router": "^1.0.0",
     "@tiptap/core": "^2.8.0",
     "@tiptap/react": "^2.8.0",
     "@tiptap/starter-kit": "^2.8.0",
+    "@xyflow/react": "^12.2.0",
+    "better-auth": "^1.4.18",
     "cmdk": "^1.0.0",
     "framer-motion": "^11.0.0",
-    "zustand": "^5.0.0",
-    "lucide-react": "^0.460.0"
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",

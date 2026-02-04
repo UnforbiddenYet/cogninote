@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import authRoutes from "./routes/auth";
+import { auth } from "./lib/auth";
 import notesRoutes from "./routes/notes";
 import tagsRoutes from "./routes/tags";
 import linksRoutes from "./routes/links";
@@ -14,9 +14,9 @@ const app = new Hono();
 app.use(logger());
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.ALLOWED_ORIGIN || "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 // Health check
@@ -34,7 +34,9 @@ app.get("/", (c) => {
 });
 
 // API routes
-app.route("/api/auth", authRoutes);
+app.use("/api/auth/*", async (c) => {
+  return auth.handler(c.req.raw);
+});
 app.route("/api/notes", notesRoutes);
 app.route("/api/tags", tagsRoutes);
 app.route("/api/links", linksRoutes);
@@ -48,7 +50,7 @@ app.onError((err, c) => {
     {
       error: err.message || "Internal Server Error",
     },
-    500
+    500,
   );
 });
 

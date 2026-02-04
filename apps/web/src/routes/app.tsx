@@ -5,8 +5,11 @@ import { FolderProvider } from "../contexts/FolderContext";
 import { FolderTree } from "../components/folders/FolderTree";
 import { fetchFolders } from "../lib/api/folders";
 import { queryClient } from "../lib/queryClient";
+import { signOut } from "../lib/auth/authClient";
+import { requireAuth } from "../lib/auth/authGuard";
 
 export const Route = createFileRoute("/app")({
+  beforeLoad: async () => await requireAuth(),
   loader: async () => {
     try {
       const foldersData = await queryClient.ensureQueryData({
@@ -31,9 +34,8 @@ function AppLayout() {
     { icon: Network, label: "Graph", href: "/app/graph" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem("folder_tree_expanded");
     localStorage.removeItem("folder_tree_selected_note");
     localStorage.removeItem("folder_tree_selected_folder");

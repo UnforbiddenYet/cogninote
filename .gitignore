@@ -8,6 +8,7 @@ build/
 dist/
 .next/
 out/
+.tanstack
 
 # Generated files
 **/*routeTree.gen.ts

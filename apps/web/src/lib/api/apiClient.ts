@@ -2,25 +2,15 @@ const API_URL =
   (typeof window !== "undefined" && (window as any).__API_URL__) ||
   "http://localhost:3001";
 
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("accessToken");
-}
-
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: "include", // Important: include cookies for session
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });

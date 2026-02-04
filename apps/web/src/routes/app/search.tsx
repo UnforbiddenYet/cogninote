@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { NoteList } from "../../components/notes/NoteList";
+import { apiRequest } from "../../lib/api/apiClient";
 
 export const Route = createFileRoute("/app/search")({
   component: SearchPage,
@@ -15,7 +16,6 @@ type Note = {
 };
 
 function SearchPage() {
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,24 +26,11 @@ function SearchPage() {
     if (!query.trim()) return;
 
     setLoading(true);
-    const token = localStorage.getItem("accessToken");
 
     try {
-      const apiUrl = (typeof window !== "undefined" && (window as any).__API_URL__) || "http://localhost:3001";
-      const response = await fetch(
-        `${apiUrl}/api/search?q=${encodeURIComponent(query)}&limit=50`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const data = await apiRequest<{ data: { results: Note[] } }>(
+        `/api/search?q=${encodeURIComponent(query)}&limit=50`
       );
-
-      if (!response.ok) {
-        return;
-      }
-
-      const data = await response.json();
       setResults(data.data.results);
       setSearched(true);
     } catch (error) {

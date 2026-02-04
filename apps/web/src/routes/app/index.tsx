@@ -1,5 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
 import { FileText, Network, Search, Plus, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/app/")({
@@ -7,55 +6,23 @@ export const Route = createFileRoute("/app/")({
 });
 
 function Dashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // Get session from parent route context (set by requireAuth)
+  const { session } = useRouteContext({ from: "/app" });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        navigate({ to: "/auth/login" });
-        return;
-      }
-
-      try {
-        const apiUrl = (typeof window !== "undefined" && (window as any).__API_URL__) || "http://localhost:3001";
-        const response = await fetch(`${apiUrl}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          navigate({ to: "/auth/login" });
-          return;
-        }
-
-        const data = await response.json();
-        setUser(data.data.user);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-        navigate({ to: "/auth/login" });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  if (loading) {
+  // Handle case where session might not be available
+  if (!session?.user) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-pulse">
-            <p className="text-muted text-sm">Loading your vault...</p>
+            <p className="text-muted text-sm">Loading...</p>
           </div>
         </div>
       </div>
     );
   }
+
+  const user = session.user;
 
   return (
     <div className="space-y-8">

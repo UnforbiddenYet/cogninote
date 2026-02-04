@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
+import { signIn } from "../../lib/auth/authClient";
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
@@ -18,32 +19,16 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const apiUrl = (typeof window !== "undefined" && (window as any).__API_URL__) || "http://localhost:3001";
-      const response = await fetch(
-        `${apiUrl}/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      await signIn.email({
+        email,
+        password,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Login failed");
-        return;
-      }
-
-      // Store tokens
-      localStorage.setItem("accessToken", data.data.accessToken);
-      localStorage.setItem("refreshToken", data.data.refreshToken);
-
-      // Redirect to dashboard
+      // Redirect to dashboard on success
       navigate({ to: "/app" });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred"
+        err instanceof Error ? err.message : "Login failed"
       );
     } finally {
       setLoading(false);

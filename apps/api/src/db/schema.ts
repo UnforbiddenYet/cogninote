@@ -14,6 +14,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+export * from "./auth-schema";
+import { user } from "./auth-schema";
+
 // Enums
 export const linkTypeEnum = pgEnum("link_type", [
   "manual",
@@ -33,31 +36,14 @@ export const suggestionStatusEnum = pgEnum("suggestion_status", [
   "rejected",
 ]);
 
-// Users table
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    email: varchar("email", { length: 255 }).notNull().unique(),
-    passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-    name: varchar("name", { length: 255 }).notNull(),
-    settings: jsonb("settings").default({}),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    emailIdx: index("idx_users_email").on(table.email),
-  })
-);
-
 // Folders table
 export const folders = pgTable(
   "folders",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     color: varchar("color", { length: 7 }),
     icon: varchar("icon", { length: 50 }),
@@ -69,7 +55,7 @@ export const folders = pgTable(
   (table) => ({
     userIdIdx: index("idx_folders_user_id").on(table.userId),
     positionIdx: index("idx_folders_position").on(table.userId, table.position),
-  })
+  }),
 );
 
 // Notes table
@@ -77,10 +63,12 @@ export const notes = pgTable(
   "notes",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    folderId: uuid("folder_id").references(() => folders.id, { onDelete: "set null" }),
+      .references(() => user.id, { onDelete: "cascade" }),
+    folderId: uuid("folder_id").references(() => folders.id, {
+      onDelete: "set null",
+    }),
     title: varchar("title", { length: 512 }).notNull(),
     content: text("content").notNull(),
     contentPlain: text("content_plain").notNull(),
@@ -94,7 +82,7 @@ export const notes = pgTable(
     userIdIdx: index("idx_notes_user_id").on(table.userId),
     folderIdIdx: index("idx_notes_folder_id").on(table.folderId),
     updatedAtIdx: index("idx_notes_updated_at").on(table.updatedAt),
-  })
+  }),
 );
 
 // Tags table
@@ -102,16 +90,16 @@ export const tags = pgTable(
   "tags",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
     color: varchar("color", { length: 7 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     userIdNameIdx: index("idx_tags_user_id_name").on(table.userId, table.name),
-  })
+  }),
 );
 
 // Note-Tags junction table
@@ -130,7 +118,7 @@ export const noteTags = pgTable(
     pk: primaryKey({ columns: [table.noteId, table.tagId] }),
     noteIdIdx: index("idx_note_tags_note").on(table.noteId),
     tagIdIdx: index("idx_note_tags_tag").on(table.tagId),
-  })
+  }),
 );
 
 // Links table (connections between notes)
@@ -138,9 +126,9 @@ export const links = pgTable(
   "links",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     sourceNoteId: uuid("source_note_id")
       .notNull()
       .references(() => notes.id, { onDelete: "cascade" }),
@@ -155,7 +143,7 @@ export const links = pgTable(
     sourceIdx: index("idx_links_source").on(table.sourceNoteId),
     targetIdx: index("idx_links_target").on(table.targetNoteId),
     userIdIdx: index("idx_links_user_id").on(table.userId),
-  })
+  }),
 );
 
 // AI Suggestions table
@@ -163,9 +151,9 @@ export const aiSuggestions = pgTable(
   "ai_suggestions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     noteId: uuid("note_id")
       .notNull()
       .references(() => notes.id, { onDelete: "cascade" }),
@@ -178,39 +166,12 @@ export const aiSuggestions = pgTable(
     userIdIdx: index("idx_ai_suggestions_user_id").on(table.userId),
     noteIdIdx: index("idx_ai_suggestions_note_id").on(table.noteId),
     statusIdx: index("idx_ai_suggestions_status").on(table.status),
-  })
-);
-
-// Sessions table
-export const sessions = pgTable(
-  "sessions",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    tokenHash: varchar("token_hash", { length: 255 }).notNull().unique(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    userIdIdx: index("idx_sessions_user_id").on(table.userId),
-    expiresAtIdx: index("idx_sessions_expires_at").on(table.expiresAt),
-  })
+  }),
 );
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
-  folders: many(folders),
-  notes: many(notes),
-  tags: many(tags),
-  links: many(links),
-  sessions: many(sessions),
-  aiSuggestions: many(aiSuggestions),
-}));
-
 export const notesRelations = relations(notes, ({ one, many }) => ({
-  user: one(users, { fields: [notes.userId], references: [users.id] }),
+  user: one(user, { fields: [notes.userId], references: [user.id] }),
   folder: one(folders, { fields: [notes.folderId], references: [folders.id] }),
   tags: many(noteTags),
   sourceLinks: many(links, { relationName: "source" }),
@@ -219,12 +180,12 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
 }));
 
 export const tagsRelations = relations(tags, ({ one, many }) => ({
-  user: one(users, { fields: [tags.userId], references: [users.id] }),
+  user: one(user, { fields: [tags.userId], references: [user.id] }),
   notes: many(noteTags),
 }));
 
 export const foldersRelations = relations(folders, ({ one, many }) => ({
-  user: one(users, { fields: [folders.userId], references: [users.id] }),
+  user: one(user, { fields: [folders.userId], references: [user.id] }),
   notes: many(notes),
 }));
 
@@ -234,7 +195,7 @@ export const noteTagsRelations = relations(noteTags, ({ one }) => ({
 }));
 
 export const linksRelations = relations(links, ({ one }) => ({
-  user: one(users, { fields: [links.userId], references: [users.id] }),
+  user: one(user, { fields: [links.userId], references: [user.id] }),
   source: one(notes, {
     fields: [links.sourceNoteId],
     references: [notes.id],
@@ -247,17 +208,10 @@ export const linksRelations = relations(links, ({ one }) => ({
   }),
 }));
 
-export const aiSuggestionsRelations = relations(
-  aiSuggestions,
-  ({ one }) => ({
-    user: one(users, { fields: [aiSuggestions.userId], references: [users.id] }),
-    note: one(notes, {
-      fields: [aiSuggestions.noteId],
-      references: [notes.id],
-    }),
-  })
-);
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, { fields: [sessions.userId], references: [users.id] }),
+export const aiSuggestionsRelations = relations(aiSuggestions, ({ one }) => ({
+  user: one(user, { fields: [aiSuggestions.userId], references: [user.id] }),
+  note: one(notes, {
+    fields: [aiSuggestions.noteId],
+    references: [notes.id],
+  }),
 }));

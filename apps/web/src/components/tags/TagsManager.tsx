@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { TagBadge } from "./TagBadge";
 import { TagSearch } from "./TagSearch";
+import { apiRequest } from "../../lib/api/apiClient";
 
 type Tag = {
   id: string;
@@ -30,23 +31,9 @@ export function TagsManager({
 
   useEffect(() => {
     const fetchTags = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
-
       try {
-        const apiUrl =
-          (typeof window !== "undefined" && (window as any).__API_URL__) ||
-          "http://localhost:3001";
-        const response = await fetch(`${apiUrl}/api/tags`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setAllTags(data.data.tags || []);
-        }
+        const data = await apiRequest<{ data: { tags: Tag[] } }>("/api/tags");
+        setAllTags(data.data.tags || []);
       } catch (error) {
         console.error("Failed to fetch tags:", error);
       }
@@ -60,18 +47,9 @@ export function TagsManager({
   );
 
   const handleAddTag = async (tag: Tag) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
     try {
-      const apiUrl =
-        (typeof window !== "undefined" && (window as any).__API_URL__) ||
-        "http://localhost:3001";
-      await fetch(`${apiUrl}/api/tags/${tag.id}/notes/${noteId}`, {
+      await apiRequest(`/api/tags/${tag.id}/notes/${noteId}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const newTags = [...tags, tag];
@@ -84,18 +62,9 @@ export function TagsManager({
   };
 
   const handleRemoveTag = async (tagId: string) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
     try {
-      const apiUrl =
-        (typeof window !== "undefined" && (window as any).__API_URL__) ||
-        "http://localhost:3001";
-      await fetch(`${apiUrl}/api/tags/${tagId}/notes/${noteId}`, {
+      await apiRequest(`/api/tags/${tagId}/notes/${noteId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const removedTag = tags.find((t) => t.id === tagId);
@@ -111,39 +80,22 @@ export function TagsManager({
   };
 
   const handleCreateTag = async (name: string) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
     try {
-      const apiUrl =
-        (typeof window !== "undefined" && (window as any).__API_URL__) ||
-        "http://localhost:3001";
-      const response = await fetch(`${apiUrl}/api/tags`, {
+      const data = await apiRequest<{ data: { tag: Tag } }>("/api/tags", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ name }),
       });
+      const newTag = data.data.tag;
 
-      if (response.ok) {
-        const data = await response.json();
-        const newTag = data.data.tag;
+      // Add to note
+      await apiRequest(`/api/tags/${newTag.id}/notes/${noteId}`, {
+        method: "POST",
+      });
 
-        // Add to note
-        await fetch(`${apiUrl}/api/tags/${newTag.id}/notes/${noteId}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const updatedTags = [...tags, newTag];
-        setTags(updatedTags);
-        setAllTags([...allTags, newTag]);
-        onTagsChange?.(updatedTags);
-      }
+      const updatedTags = [...tags, newTag];
+      setTags(updatedTags);
+      setAllTags([...allTags, newTag]);
+      onTagsChange?.(updatedTags);
     } catch (error) {
       console.error("Failed to create tag:", error);
     }
