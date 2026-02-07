@@ -20,5 +20,7 @@ export async function requireAuth() {
     throw redirect({ to: "/auth/login" });
   }
 
+  console.log("session", session);
+
   return { session: session.data };
 }

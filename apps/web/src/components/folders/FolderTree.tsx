@@ -59,7 +59,7 @@ export function FolderTree() {
     isCreatingRef.current = false;
   };
 
-  const handleCreateNote = () => navigate({ to: "/app/notes/new" });
+  const handleCreateNote = () => navigate({ to: "/app/new-note" });
 
   const filteredFolders = searchQuery
     ? foldersData?.folders.filter((folder) =>

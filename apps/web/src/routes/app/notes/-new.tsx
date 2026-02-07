@@ -5,7 +5,7 @@ import { NoteEditor } from "../../../components/editor/NoteEditor";
 import { useCreateNote } from "../../../hooks/useNotes";
 import { folderKeys } from "../../../hooks/useFolders";
 
-export const Route = createFileRoute("/app/notes/new")({
+export const Route = createFileRoute("/app/new-note")({
   validateSearch: (search: any) => ({
     folderId: search?.folderId as string | undefined,
   }),
