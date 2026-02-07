@@ -10,6 +10,9 @@ dist/
 out/
 .tanstack
 
+# Seed outputs
+.seed-user-id
+
 # Generated files
 **/*routeTree.gen.ts
 

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "tiptap-markdown";
 import { formatDistanceToNow } from "date-fns";
 import {
   Bold,
@@ -116,12 +117,21 @@ export function NoteEditor({
 }: EditorProps) {
   const debounceTimer = useRef<NodeJS.Timeout>();
   const hasFocused = useRef(false);
+  const isInternalUpdate = useRef(false);
   const [toolbarPosition, setToolbarPosition] = useState<
     { x: number; y: number } | undefined
   >();
 
   const editor = useEditor({
-    extensions: [StarterKit, AtomicLink],
+    extensions: [
+      StarterKit,
+      AtomicLink,
+      Markdown.configure({
+        html: true,
+        transformPastedText: true,
+        transformCopiedText: true,
+      }),
+    ],
     editorProps: {
       attributes: {
         class:
@@ -130,7 +140,8 @@ export function NoteEditor({
     },
     content,
     onUpdate: ({ editor }) => {
-      const newContent = editor.getHTML();
+      isInternalUpdate.current = true;
+      const newContent = editor.storage.markdown.getMarkdown();
       onContentChange(newContent);
 
       if (debounceTimer.current) {
@@ -176,6 +187,17 @@ export function NoteEditor({
     }
   }, [editor]);
 
+  // Sync content from props to editor when it changes externally (e.g., note loaded from API)
+  useEffect(() => {
+    if (editor && content && !isInternalUpdate.current) {
+      const currentContent = editor.storage.markdown.getMarkdown();
+      if (currentContent !== content) {
+        editor.commands.setContent(content);
+      }
+    }
+    isInternalUpdate.current = false;
+  }, [editor, content]);
+
   // Focus editor after mount if it has content (e.g., after redirect from creation)
   useEffect(() => {
     if (editor && content && !hasFocused.current) {
@@ -185,7 +207,7 @@ export function NoteEditor({
         hasFocused.current = true;
       }, 0);
     }
-  }, [editor]);
+  }, [editor, content]);
 
   useEffect(() => {
     return () => {

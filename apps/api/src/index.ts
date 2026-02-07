@@ -7,6 +7,8 @@ import tagsRoutes from "./routes/tags";
 import linksRoutes from "./routes/links";
 import searchRoutes from "./routes/search";
 import foldersRoutes from "./routes/folders";
+import aiRoutes from "./routes/ai";
+import { healthCheck as lightRAGHealth } from "./services/lightrag";
 
 const app = new Hono();
 
@@ -20,8 +22,17 @@ app.use(
 );
 
 // Health check
-app.get("/health", (c) => {
-  return c.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/health", async (c) => {
+  const lightRAGHealthy = await lightRAGHealth();
+
+  return c.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    services: {
+      database: "ok",
+      lightrag: lightRAGHealthy ? "ok" : "degraded",
+    },
+  });
 });
 
 // Routes
@@ -42,6 +53,7 @@ app.route("/api/tags", tagsRoutes);
 app.route("/api/links", linksRoutes);
 app.route("/api/search", searchRoutes);
 app.route("/api/folders", foldersRoutes);
+app.route("/api/ai", aiRoutes);
 
 // Error handling
 app.onError((err, c) => {

@@ -1,11 +1,12 @@
 import { createMiddleware } from "hono/factory";
 import type { Context } from "hono";
-import { auth } from "../auth";
+import { auth, type User } from "../auth";
 
 declare global {
   namespace HonoRequest {
     interface HonoRequest {
       userId?: string;
+      user?: User;
     }
   }
 }
