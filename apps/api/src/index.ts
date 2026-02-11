@@ -3,11 +3,12 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { auth } from "./lib/auth";
 import notesRoutes from "./routes/notes";
-import tagsRoutes from "./routes/tags";
-import linksRoutes from "./routes/links";
-import searchRoutes from "./routes/search";
-import foldersRoutes from "./routes/folders";
+import connectionsRoutes from "./routes/connections";
 import aiRoutes from "./routes/ai";
+import queryRoutes from "./routes/query";
+import suggestionsRoutes from "./routes/suggestions";
+import dashboardRoutes from "./routes/dashboard";
+import graphRoutes from "./routes/graph";
 import { healthCheck as lightRAGHealth } from "./services/lightrag";
 
 const app = new Hono();
@@ -39,7 +40,7 @@ app.get("/health", async (c) => {
 app.get("/", (c) => {
   return c.json({
     message: "MindGraph API",
-    version: "0.1.0",
+    version: "0.2.0",
     status: "running",
   });
 });
@@ -49,11 +50,12 @@ app.use("/api/auth/*", async (c) => {
   return auth.handler(c.req.raw);
 });
 app.route("/api/notes", notesRoutes);
-app.route("/api/tags", tagsRoutes);
-app.route("/api/links", linksRoutes);
-app.route("/api/search", searchRoutes);
-app.route("/api/folders", foldersRoutes);
+app.route("/api/connections", connectionsRoutes);
 app.route("/api/ai", aiRoutes);
+app.route("/api/query", queryRoutes);
+app.route("/api/suggestions", suggestionsRoutes);
+app.route("/api/dashboard", dashboardRoutes);
+app.route("/api/graph", graphRoutes);
 
 // Error handling
 app.onError((err, c) => {

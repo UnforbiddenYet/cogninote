@@ -1,10 +1,12 @@
-import { eq, and, desc, sql, isNull, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { db } from "../db";
-import { notes, noteTags, tags } from "../db/schema";
+import { notes } from "../db/schema";
 import {
   indexNote as indexNoteInLightRAG,
   deleteNote as deleteNoteFromLightRAG,
   reindexNote as reindexNoteInLightRAG,
+  searchEntities,
+  getSubgraph,
   LIGHTRAG_ENABLED,
 } from "./lightrag";
 
@@ -12,7 +14,6 @@ type CreateNoteInput = {
   title: string;
   content: string;
   color?: string;
-  folderId?: string;
 };
 
 type UpdateNoteInput = {
@@ -20,7 +21,6 @@ type UpdateNoteInput = {
   content?: string;
   color?: string;
   isArchived?: boolean;
-  folderId?: string | null;
   summary?: string;
 };
 
@@ -34,7 +34,6 @@ type Note = {
   summary?: string;
   createdAt: Date;
   updatedAt: Date;
-  tags?: Array<{ id: string; name: string; color?: string }>;
 };
 
 export async function createNote(
@@ -49,7 +48,6 @@ export async function createNote(
     .insert(notes)
     .values({
       userId,
-      folderId: input.folderId || null,
       title: input.title,
       content: input.content,
       contentPlain,
@@ -96,15 +94,6 @@ export async function getNoteById(
   }
 
   const note = result[0];
-  const noteTags_ = await db
-    .select({
-      id: tags.id,
-      name: tags.name,
-      color: tags.color,
-    })
-    .from(noteTags)
-    .innerJoin(tags, eq(noteTags.tagId, tags.id))
-    .where(eq(noteTags.noteId, noteId));
 
   return {
     id: note.id,
@@ -116,11 +105,6 @@ export async function getNoteById(
     summary: note.summary || undefined,
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
-    tags: noteTags_.map((t) => ({
-      id: t.id,
-      name: t.name,
-      color: t.color || undefined,
-    })),
   };
 }
 
@@ -176,36 +160,17 @@ export async function listNotes(
     .limit(limit)
     .offset(offset);
 
-  const notesList = await Promise.all(
-    result.map(async (note) => {
-      const noteTags_ = await db
-        .select({
-          id: tags.id,
-          name: tags.name,
-          color: tags.color,
-        })
-        .from(noteTags)
-        .innerJoin(tags, eq(noteTags.tagId, tags.id))
-        .where(eq(noteTags.noteId, note.id));
-
-      return {
-        id: note.id,
-        userId: note.userId,
-        title: note.title,
-        content: note.content,
-        color: note.color || undefined,
-        isArchived: note.isArchived,
-        summary: note.summary || undefined,
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt,
-        tags: noteTags_.map((t) => ({
-          id: t.id,
-          name: t.name,
-          color: t.color || undefined,
-        })),
-      };
-    }),
-  );
+  const notesList = result.map((note) => ({
+    id: note.id,
+    userId: note.userId,
+    title: note.title,
+    content: note.content,
+    color: note.color || undefined,
+    isArchived: note.isArchived,
+    summary: note.summary || undefined,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  }));
 
   return { notes: notesList, total };
 }
@@ -233,8 +198,6 @@ export async function updateNote(
   }
   if (input.color !== undefined) updateData.color = input.color;
   if (input.isArchived !== undefined) updateData.isArchived = input.isArchived;
-  if (input.folderId !== undefined)
-    updateData.folderId = input.folderId || null;
   if (input.summary) updateData.summary = input.summary;
 
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
@@ -254,6 +217,15 @@ export async function updateNote(
       ).catch((err) =>
         console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
       );
+
+      // TODO: After reindex, validate existing connections for this note.
+      // Entities may have changed — connections based on old shared entities
+      // could now be stale. Steps:
+      // 1. Get updated entities for this note from LightRAG
+      // 2. For each ai_suggested connection, check if the bridging entities
+      //    (stored in connection description) still exist in both notes
+      // 3. Remove or flag connections whose shared entities no longer overlap
+      // 4. Deduplicate: check if any pending suggestions duplicate rejected ones
     }
   }
 
@@ -282,72 +254,6 @@ export async function deleteNote(
   return true;
 }
 
-export async function getUncategorizedNotes(
-  userId: string,
-  limit = 20,
-  offset = 0,
-): Promise<{ notes: Note[]; total: number }> {
-  const countResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(notes)
-    .where(
-      and(
-        eq(notes.userId, userId),
-        eq(notes.isArchived, false),
-        isNull(notes.folderId),
-      ),
-    );
-
-  const total = countResult[0]?.count || 0;
-
-  const result = await db
-    .select()
-    .from(notes)
-    .where(
-      and(
-        eq(notes.userId, userId),
-        eq(notes.isArchived, false),
-        isNull(notes.folderId),
-      ),
-    )
-    .orderBy(desc(notes.updatedAt))
-    .limit(limit)
-    .offset(offset);
-
-  const notesList = await Promise.all(
-    result.map(async (note) => {
-      const noteTags_ = await db
-        .select({
-          id: tags.id,
-          name: tags.name,
-          color: tags.color,
-        })
-        .from(noteTags)
-        .innerJoin(tags, eq(noteTags.tagId, tags.id))
-        .where(eq(noteTags.noteId, note.id));
-
-      return {
-        id: note.id,
-        userId: note.userId,
-        title: note.title,
-        content: note.content,
-        color: note.color || undefined,
-        isArchived: note.isArchived,
-        summary: note.summary || undefined,
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt,
-        tags: noteTags_.map((t) => ({
-          id: t.id,
-          name: t.name,
-          color: t.color || undefined,
-        })),
-      };
-    }),
-  );
-
-  return { notes: notesList, total };
-}
-
 export async function buildSemanticResults(
   userId: string,
   semanticResults: Array<{ noteId: string; score: number; snippet?: string }>,
@@ -372,4 +278,33 @@ export async function buildSemanticResults(
       },
     ];
   });
+}
+
+export async function getNoteEntities(
+  userId: string,
+  noteId: string,
+): Promise<
+  Array<{ label: string; count: number; related?: Array<{ label: string }> }>
+> {
+  const note = await getNoteById(userId, noteId);
+  if (!note) return [];
+
+  // Search entities matching the note title
+  const entities = await searchEntities(userId, note.title, 10);
+  if (entities.length === 0) return [];
+
+  // For the top entity, get its immediate subgraph
+  const topEntity = entities[0];
+  const subgraph = await getSubgraph(userId, topEntity.label, 1, 20);
+
+  return entities.map((entity) => ({
+    label: entity.label,
+    count: entity.count,
+    related: subgraph
+      ? subgraph.nodes
+          .filter((n) => n.label !== entity.label)
+          .slice(0, 5)
+          .map((n) => ({ label: n.label }))
+      : undefined,
+  }));
 }

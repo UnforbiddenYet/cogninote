@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchNote,
-  fetchRelatedNotes,
   updateNote,
   createNote,
   deleteNote,
@@ -11,7 +10,6 @@ import {
 export const noteKeys = {
   all: ["notes"] as const,
   detail: (id: string) => [...noteKeys.all, "detail", id] as const,
-  related: (id: string) => [...noteKeys.all, "related", id] as const,
 };
 
 // Query Hooks
@@ -19,14 +17,6 @@ export function useNote(noteId: string) {
   return useQuery({
     queryKey: noteKeys.detail(noteId),
     queryFn: () => fetchNote(noteId),
-    enabled: !!noteId,
-  });
-}
-
-export function useRelatedNotes(noteId: string) {
-  return useQuery({
-    queryKey: noteKeys.related(noteId),
-    queryFn: () => fetchRelatedNotes(noteId),
     enabled: !!noteId,
   });
 }
@@ -59,12 +49,10 @@ export function useCreateNote() {
     mutationFn: ({
       title,
       content,
-      folderId,
     }: {
       title: string;
       content?: string;
-      folderId?: string;
-    }) => createNote(title, content, folderId),
+    }) => createNote(title, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
     },

@@ -105,7 +105,7 @@ This project is being built in 6 phases:
 
 1. **Phase 0**: Project Setup & Infrastructure ✓ (In Progress)
 2. **Phase 1**: Foundation (Database, Auth, Core API)
-3. **Phase 2**: Core Features (Notes, Tags, Links, Search)
+3. **Phase 2**: Core Features (Notes, Search)
 4. **Phase 3**: Graph Visualization
 5. **Phase 4**: AI Integration
 6. **Phase 5**: Polish, Testing & Optimization

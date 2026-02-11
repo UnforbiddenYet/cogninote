@@ -11,7 +11,7 @@
  */
 
 import { db } from "../db";
-import { notes, folders } from "../db/schema";
+import { notes } from "../db/schema";
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 
@@ -27,25 +27,6 @@ async function getUserId(): Promise<string> {
     console.error("   bun run apps/api/src/scripts/seed-user.ts");
     process.exit(1);
   }
-}
-
-async function seedFolder(userId: string) {
-  console.log("📝 Seeding folder...\n");
-
-  await db.delete(folders);
-
-  const result = await db
-    .insert(folders)
-    .values({
-      name: "My folder",
-      userId,
-    })
-    .returning();
-
-  const folder = result[0];
-
-  console.log(`✅ Created: ${folder.name}\n`);
-  return folder;
 }
 
 async function seedNotes() {
@@ -68,9 +49,6 @@ async function seedNotes() {
     let created = 0;
     let skipped = 0;
 
-    // Seed folder
-    const folder = await seedFolder(userId);
-
     for (let i = 0; i < mdFiles.length; i++) {
       const fileName = mdFiles[i];
       const filePath = join(SEEDS_DIR, fileName);
@@ -89,7 +67,6 @@ async function seedNotes() {
         title,
         content,
         contentPlain,
-        folderId: i % 3 === 0 ? folder.id : undefined,
       });
 
       console.log(`✅ Created: ${title}`);

@@ -1,22 +1,21 @@
 import { create } from 'zustand'
-import type { Note } from './mock-data'
 
 interface IslandStore {
   query: string
-  searchResults: Note[]
+  submittedQuery: string
   isAIExpanded: boolean
   setQuery: (query: string) => void
-  setSearchResults: (results: Note[]) => void
+  submitQuery: () => void
   setIsAIExpanded: (expanded: boolean) => void
   reset: () => void
 }
 
-export const useIslandStore = create<IslandStore>((set) => ({
+export const useIslandStore = create<IslandStore>((set, get) => ({
   query: '',
-  searchResults: [],
+  submittedQuery: '',
   isAIExpanded: false,
   setQuery: (query) => set({ query }),
-  setSearchResults: (searchResults) => set({ searchResults }),
+  submitQuery: () => set({ submittedQuery: get().query.trim() }),
   setIsAIExpanded: (isAIExpanded) => set({ isAIExpanded }),
-  reset: () => set({ query: '', searchResults: [], isAIExpanded: false }),
+  reset: () => set({ query: '', submittedQuery: '', isAIExpanded: false }),
 }))

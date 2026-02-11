@@ -1,7 +1,7 @@
 import React from "react"
 import { useRef, useEffect } from 'react'
 
-import { Plus, Sparkles, Network, X, FolderOpen, Home } from 'lucide-react'
+import { Plus, Sparkles, Network, X, FolderOpen, Home, Send } from 'lucide-react'
 // import { useRouter, usePathname } from 'next/navigation'
 import { useIslandStore } from '../lib/store'
 import { useNavigate, useMatchRoute } from "@tanstack/react-router"
@@ -9,7 +9,7 @@ import { useNavigate, useMatchRoute } from "@tanstack/react-router"
 export function MagicIsland() {
   const navigate = useNavigate();
   const matchRoute = useMatchRoute();
-  const { query, setQuery, reset, isAIExpanded, setIsAIExpanded } = useIslandStore()
+  const { query, setQuery, submitQuery, reset, isAIExpanded, setIsAIExpanded } = useIslandStore()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const isEditor = !!matchRoute({ to: '/app/new-note' })
@@ -57,8 +57,8 @@ export function MagicIsland() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
+      submitQuery()
       navigate({ to: '/app/search' })
-      // Keep expanded state so input stays visible on search page
     }
   }
 
@@ -105,6 +105,13 @@ export function MagicIsland() {
             placeholder="Ask anything..."
             className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-primary-foreground/60"
           />
+          <button
+            type="submit"
+            disabled={!query.trim()}
+            className="hover:bg-primary-foreground/20 rounded-full p-1 transition-colors disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={handleCloseAI}

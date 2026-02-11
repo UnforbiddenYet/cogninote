@@ -2,7 +2,7 @@
  * LightRAG Client Service
  *
  * Handles all interactions with the LightRAG API for semantic search,
- * Q&A, and document indexing with multi-tenant workspace support.
+ * Q&A, and document indexing
  */
 
 // Configuration
@@ -12,11 +12,27 @@ const LIGHTRAG_ENABLED = process.env.LIGHTRAG_ENABLED === "true";
 const LIGHTRAG_TIMEOUT_MS = parseInt(
   process.env.LIGHTRAG_TIMEOUT_MS || "30000",
 );
-const LIGHTRAG_MAX_RETRIES = parseInt(process.env.LIGHTRAG_MAX_RETRIES || "3");
-const LIGHTRAG_WORKSPACE_HEADER = "LIGHTRAG-WORKSPACE";
+const LIGHTRAG_LLM_TIMEOUT_MS = parseInt(
+  process.env.LIGHTRAG_LLM_TIMEOUT_MS || "120000",
+);
+const LIGHTRAG_MAX_RETRIES = parseInt(process.env.LIGHTRAG_MAX_RETRIES || "2");
 
-// Types
-type QueryMode = "local" | "global" | "hybrid" | "naive" | "mix";
+/**
+ * Query Modes
+ * - local: Entity-focused retrieval with direct relationships
+ * - global: Pattern analysis across the knowledge graph
+ * - hybrid: Combined local and global strategies
+ * - naive: Vector similarity search only
+ * - mix: Integrated knowledge graph + vector retrieval (recommended)
+ * - bypass: Direct LLM query without knowledge retrieval
+ */
+export type QueryMode =
+  | "local"
+  | "global"
+  | "hybrid"
+  | "naive"
+  | "mix"
+  | "bypass";
 
 interface SemanticMatch {
   noteId: string;
@@ -24,10 +40,46 @@ interface SemanticMatch {
   score: number;
 }
 
-interface QueryResponse {
+interface QueryResponseASKQUESTION {
   answer: string;
   context: string[];
   sources: string[];
+}
+
+export interface KnowledgeGraphNode {
+  id: string;
+  label: string;
+  properties?: Record<string, any>;
+}
+
+export interface KnowledgeGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  properties?: Record<string, any>;
+}
+
+export interface KnowledgeGraph {
+  nodes: KnowledgeGraphNode[];
+  edges: KnowledgeGraphEdge[];
+}
+
+export interface PopularEntity {
+  label: string;
+  count: number;
+}
+
+export interface QueryResponse {
+  answer: string;
+  sources: string[];
+}
+
+export interface FullQueryResponse {
+  answer: string;
+  sources: string[];
+  entities: Array<{ name: string; description?: string }>;
+  relationships: Array<{ from: string; relationship: string; to: string }>;
 }
 
 // Error handling
@@ -49,7 +101,7 @@ async function makeRequest<T>(
   endpoint: string,
   method: string,
   body?: any,
-  workspace?: string,
+  timeoutMs: number = LIGHTRAG_TIMEOUT_MS,
 ): Promise<T | null> {
   if (!LIGHTRAG_ENABLED) {
     console.log("LightRAG is disabled");
@@ -57,16 +109,13 @@ async function makeRequest<T>(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), LIGHTRAG_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const requestBody = body ? { ...body } : undefined;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (workspace) {
-      headers[LIGHTRAG_WORKSPACE_HEADER] = workspace;
-    }
 
     const response = await fetch(`${LIGHTRAG_API_URL}${endpoint}`, {
       method,
@@ -141,13 +190,6 @@ async function retryWithBackoff<T>(
 }
 
 /**
- * Get workspace identifier for a user
- */
-function getUserWorkspace(userId: string): string {
-  return `user_${userId}`;
-}
-
-/**
  * Build a stable file source name for LightRAG documents
  */
 function getNoteFileSource(noteId: string): string {
@@ -189,7 +231,6 @@ export async function indexNote(
   title: string,
   content: string,
 ): Promise<boolean> {
-  const workspace = getUserWorkspace(userId);
   const fileSource = getNoteFileSource(noteId);
 
   // Combine title and content for better context
@@ -197,15 +238,10 @@ export async function indexNote(
 
   try {
     const result = await retryWithBackoff(() =>
-      makeRequest(
-        "/documents/text",
-        "POST",
-        {
-          text: documentContent,
-          file_source: fileSource,
-        },
-        workspace,
-      ),
+      makeRequest("/documents/text", "POST", {
+        text: documentContent,
+        file_source: fileSource,
+      }),
     );
 
     if (result) {
@@ -228,17 +264,10 @@ export async function deleteNote(
   userId: string,
   noteId: string,
 ): Promise<boolean> {
-  const workspace = getUserWorkspace(userId);
-
   try {
     const fileSource = getNoteFileSource(noteId);
     const docIds = await retryWithBackoff(async () => {
-      const docsResult = await makeRequest<any>(
-        "/documents",
-        "GET",
-        undefined,
-        workspace,
-      );
+      const docsResult = await makeRequest<any>("/documents", "GET", undefined);
       const docs = normalizeDocuments(docsResult);
 
       return docs
@@ -261,14 +290,9 @@ export async function deleteNote(
     }
 
     const result = await retryWithBackoff(() =>
-      makeRequest(
-        "/documents/delete",
-        "POST",
-        {
-          doc_ids: docIds,
-        },
-        workspace,
-      ),
+      makeRequest("/documents/delete", "POST", {
+        doc_ids: docIds,
+      }),
     );
 
     if (result) {
@@ -293,8 +317,6 @@ export async function searchSemantic(
   mode: QueryMode = "hybrid",
   limit: number = 20,
 ): Promise<SemanticMatch[]> {
-  const workspace = getUserWorkspace(userId);
-
   try {
     const result = await retryWithBackoff(() =>
       makeRequest<any>(
@@ -308,7 +330,7 @@ export async function searchSemantic(
           include_references: true,
           only_need_context: true,
         },
-        workspace,
+        LIGHTRAG_LLM_TIMEOUT_MS,
       ),
     );
 
@@ -354,66 +376,6 @@ export async function searchSemantic(
 }
 
 /**
- * Ask a question and get an AI-generated answer with sources
- */
-export async function askQuestion(
-  userId: string,
-  question: string,
-  mode: QueryMode = "hybrid",
-): Promise<QueryResponse | null> {
-  const workspace = getUserWorkspace(userId);
-
-  try {
-    const result = await retryWithBackoff(() =>
-      makeRequest<any>(
-        "/query/data",
-        "POST",
-        {
-          query: question,
-          mode,
-          include_references: true,
-        },
-        workspace,
-      ),
-    );
-
-    if (!result) {
-      return null;
-    }
-
-    // Extract sources (note IDs) from the response
-    const sources: string[] = [];
-    const references = Array.isArray(result.references)
-      ? result.references
-      : Array.isArray(result.sources)
-        ? result.sources
-        : [];
-
-    for (const ref of references) {
-      if (typeof ref === "string") {
-        const noteId = getNoteIdFromFilePath(ref) || ref.replace(/^note_/, "");
-        if (noteId) sources.push(noteId);
-        continue;
-      }
-
-      const filePath =
-        ref.file_path || ref.filePath || ref.file_source || ref.fileSource;
-      const noteId = getNoteIdFromFilePath(filePath);
-      if (noteId) sources.push(noteId);
-    }
-
-    return {
-      answer: result.response || result.answer || "",
-      context: result.context || [],
-      sources: Array.from(new Set(sources)),
-    };
-  } catch (error) {
-    console.error("Q&A failed:", error);
-    return null;
-  }
-}
-
-/**
  * Generate a summary for content using LightRAG
  */
 export async function generateSummary(content: string): Promise<string | null> {
@@ -422,7 +384,6 @@ export async function generateSummary(content: string): Promise<string | null> {
   }
 
   try {
-    // Use a temporary workspace for summary generation
     const result = await retryWithBackoff(() =>
       makeRequest<any>(
         "/query",
@@ -431,7 +392,7 @@ export async function generateSummary(content: string): Promise<string | null> {
           query: `Please provide a concise summary (2-3 sentences) of the following content:\n\n${content}`,
           mode: "naive",
         },
-        "temp_summary",
+        LIGHTRAG_LLM_TIMEOUT_MS,
       ),
     );
 
@@ -482,6 +443,279 @@ export async function healthCheck(): Promise<boolean> {
   } catch (error) {
     console.error("LightRAG health check failed:", error);
     return false;
+  }
+}
+
+// --- Graph Exploration Functions ---
+
+/**
+ * Get a subgraph from LightRAG centered on a given entity label
+ */
+export async function getSubgraph(
+  userId: string,
+  label: string,
+  maxDepth: number = 2,
+  maxNodes: number = 50,
+): Promise<KnowledgeGraph | null> {
+  try {
+    const params = new URLSearchParams({
+      label,
+      max_depth: String(maxDepth),
+      max_nodes: String(maxNodes),
+    });
+
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>(`/graphs?${params}`, "GET", undefined),
+    );
+
+    if (!result) return null;
+
+    const nodes: KnowledgeGraphNode[] = (result.nodes || []).map((n: any) => ({
+      id: n.id || (Array.isArray(n.labels) ? n.labels[0] : n.label) || n.name,
+      label:
+        (Array.isArray(n.labels) ? n.labels[0] : n.label) || n.name || n.id,
+      properties: n.properties || n.metadata || {},
+    }));
+
+    const edges: KnowledgeGraphEdge[] = (
+      result.edges ||
+      result.links ||
+      []
+    ).map((e: any) => ({
+      id: e.id || `${e.source}-${e.target}`,
+      source: e.source || e.from,
+      target: e.target || e.to,
+      label:
+        e.properties?.description ||
+        e.properties?.keywords ||
+        e.label ||
+        e.relationship ||
+        "",
+      properties: e.properties || e.metadata || {},
+    }));
+
+    return { nodes, edges };
+  } catch (error) {
+    console.error("getSubgraph failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Get all entity labels from LightRAG
+ */
+export async function getEntityLabels(userId: string): Promise<string[]> {
+  try {
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>("/graph/label/list", "GET", undefined),
+    );
+
+    if (!result) return [];
+    return Array.isArray(result) ? result : result.labels || result.data || [];
+  } catch (error) {
+    console.error("getEntityLabels failed:", error);
+    return [];
+  }
+}
+
+/**
+ * Get popular entities from LightRAG, enriched with edge counts from subgraphs
+ */
+export async function getPopularEntities(
+  userId: string,
+  limit: number = 20,
+): Promise<PopularEntity[]> {
+  try {
+    const params = new URLSearchParams({ limit: String(limit) });
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>(`/graph/label/popular?${params}`, "GET", undefined),
+    );
+
+    if (!result) return [];
+
+    // LightRAG returns plain string[] for popular labels
+    const items: string[] = Array.isArray(result)
+      ? result.map((item: any) =>
+          typeof item === "string" ? item : item.label || item.name || "",
+        )
+      : result.data || result.labels || [];
+
+    // Fetch shallow subgraphs in parallel to get edge counts
+    const entities = await Promise.all(
+      items.slice(0, limit).map(async (label) => {
+        const subgraph = await getSubgraph(userId, label, 1, 30);
+        return {
+          label,
+          count: subgraph?.edges?.length || 0,
+        };
+      }),
+    );
+
+    return entities;
+  } catch (error) {
+    console.error("getPopularEntities failed:", error);
+    return [];
+  }
+}
+
+/**
+ * Search entities in LightRAG
+ */
+export async function searchEntities(
+  userId: string,
+  query: string,
+  limit: number = 10,
+): Promise<PopularEntity[]> {
+  try {
+    const params = new URLSearchParams({ q: query, limit: String(limit) });
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>(`/graph/label/search?${params}`, "GET", undefined),
+    );
+
+    if (!result) return [];
+
+    // LightRAG returns plain string[] for search results
+    const items: string[] = Array.isArray(result)
+      ? result.map((item: any) =>
+          typeof item === "string" ? item : item.label || item.name || "",
+        )
+      : result.data || result.labels || [];
+
+    return items.slice(0, limit).map((label) => ({
+      label,
+      count: 0, // Count not available from search endpoint
+    }));
+  } catch (error) {
+    console.error("searchEntities failed:", error);
+    return [];
+  }
+}
+
+/**
+ * Check if a specific entity exists in LightRAG
+ */
+export async function entityExists(
+  userId: string,
+  name: string,
+): Promise<boolean> {
+  try {
+    const params = new URLSearchParams({ name });
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>(`/graph/entity/exists?${params}`, "GET", undefined),
+    );
+
+    return result?.exists === true;
+  } catch (error) {
+    console.error("entityExists failed:", error);
+    return false;
+  }
+}
+
+/**
+ * Get LightRAG pipeline status
+ */
+export async function getPipelineStatus(userId: string): Promise<any | null> {
+  try {
+    return await retryWithBackoff(() =>
+      makeRequest<any>("/documents/pipeline_status", "GET", undefined),
+    );
+  } catch (error) {
+    console.error("getPipelineStatus failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Extract cited reference IDs from LightRAG responses.
+ * Handles multiple citation formats the LLM may use:
+ *   - Inline markers: 【1†note_xxx.md】
+ *   - Markdown references section: - [1] note_xxx.md
+ */
+function extractCitedReferenceIds(text: string): Set<string> {
+  const ids = new Set<string>();
+
+  // Inline 【1†...】 markers
+  for (const m of text.matchAll(/【(\d+)†[^】]*】/g)) {
+    ids.add(m[1]);
+  }
+
+  // ### References section: lines like "- [1] note_xxx.md"
+  const refSection = text.match(/###?\s*References[\s\S]*$/i);
+  if (refSection) {
+    for (const m of refSection[0].matchAll(/\[(\d+)\]/g)) {
+      ids.add(m[1]);
+    }
+  }
+
+  return ids;
+}
+
+/**
+ * Strip the trailing ### References section and inline citation markers from the answer
+ */
+function cleanAnswerText(text: string): string {
+  return text
+    .replace(/\n+###?\s*References[\s\S]*$/i, "")
+    .replace(/【\d+†[^】]*】/g, "")
+    .trim();
+}
+
+type LightRAGQueryResponse = {
+  response: string;
+  references: {
+    reference_id: string;
+    file_path: string;
+    content: null;
+  }[];
+};
+
+function getQueryCleanResponse(r: LightRAGQueryResponse) {
+  const { response: rawAnswer, references: allRefs } = r;
+  const answer = cleanAnswerText(rawAnswer);
+  const citedIds = extractCitedReferenceIds(rawAnswer);
+  const citedRefs =
+    citedIds.size > 0
+      ? allRefs.filter((r) => citedIds.has(r.reference_id))
+      : [];
+  const sources = citedRefs
+    .map((r) => getNoteIdFromFilePath(r.file_path))
+    .filter(Boolean) as string[];
+
+  return {
+    answer,
+    sources,
+  };
+}
+
+export async function queryRAG(
+  userId: string,
+  query: string,
+  mode: QueryMode,
+  topK: number = 10,
+): Promise<QueryResponse | null> {
+  try {
+    const answerResult = await retryWithBackoff<LightRAGQueryResponse>(() =>
+      makeRequest<any>(
+        "/query",
+        "POST",
+        {
+          query,
+          mode,
+          top_k: topK,
+          include_references: true,
+        },
+        LIGHTRAG_LLM_TIMEOUT_MS,
+      ),
+    );
+
+    if (!answerResult) {
+      return null;
+    }
+
+    return getQueryCleanResponse(answerResult);
+  } catch (error) {
+    console.error("query failed:", error);
+    return null;
   }
 }
 

@@ -22,7 +22,8 @@ export function NoteCard({ note }: { note: Note }) {
 
   return (
     <Link
-      to={`/app/notes/$${note.id}`}
+      to="/app/notes/$noteId"
+      params={{ noteId: note.id }}
       className="card block transition-colors hover:bg-secondary"
       style={note.color ? { borderLeftColor: note.color, borderLeftWidth: "4px" } : {}}
     >
