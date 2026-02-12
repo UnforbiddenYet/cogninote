@@ -10,16 +10,19 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useDashboard } from "../hooks/useDashboard";
-import type { TimeRange } from "../lib/api/dashboard";
+// import type { TimeRange } from "../lib/api/dashboard";
 import { features } from "../lib/features";
+
+type TimeRangeQuery = Parameters<typeof useDashboard>[0]["timeRange"]
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
 });
 
+
 function Dashboard() {
-  const [timeRange, setTimeRange] = useState<TimeRange>("7d");
-  const { data, isLoading, error } = useDashboard(timeRange);
+  const [timeRange, setTimeRange] = useState<TimeRangeQuery>("7d");
+  const { data, isLoading, error } = useDashboard({ timeRange });
 
   if (isLoading) {
     return (

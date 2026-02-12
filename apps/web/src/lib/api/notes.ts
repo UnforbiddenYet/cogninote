@@ -1,49 +1,63 @@
-import { apiRequest } from "./apiClient";
+import {
+  honoClient,
+  type InferReqJson,
+  type InferPathParam,
+  parseResponse,
+} from "./apiClient";
 
-export type Note = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export async function fetchNote(noteId: string): Promise<Note> {
-  const result = await apiRequest<{
-    success: boolean;
-    data: { note: Note };
-  }>(`/api/notes/${noteId}`);
-  return result.data.note;
+export async function fetchNote(
+  noteId: InferPathParam<
+    (typeof honoClient.api.notes)[":noteId"]["$get"],
+    "noteId"
+  >,
+) {
+  const response = await parseResponse(
+    honoClient.api.notes[":noteId"].$get({
+      param: { noteId },
+    }),
+  );
+  return response.data.note;
 }
 
-export async function updateNote(
-  noteId: string,
-  updates: { title?: string; content?: string }
-): Promise<Note> {
-  const result = await apiRequest<{
-    success: boolean;
-    data: { note: Note };
-  }>(`/api/notes/${noteId}`, {
-    method: "PATCH",
-    body: JSON.stringify(updates),
-  });
-  return result.data.note;
+export async function updateNote({
+  noteId,
+  updates,
+}: {
+  noteId: InferPathParam<
+    (typeof honoClient.api.notes)[":noteId"]["$patch"],
+    "noteId"
+  >;
+  updates: InferReqJson<(typeof honoClient.api.notes)[":noteId"]["$patch"]>;
+}) {
+  const response = await parseResponse(
+    honoClient.api.notes[":noteId"].$patch({
+      param: { noteId },
+      json: updates,
+    }),
+  );
+  return response.data.note;
 }
 
 export async function createNote(
-  title: string,
-  content?: string,
-): Promise<Note> {
-  const result = await apiRequest<{
-    success: boolean;
-    data: { note: Note };
-  }>("/api/notes", {
-    method: "POST",
-    body: JSON.stringify({ title, content }),
-  });
-  return result.data.note;
+  json: InferReqJson<(typeof honoClient.api.notes)["$post"]>,
+) {
+  const response = await parseResponse(
+    honoClient.api.notes.$post({
+      json,
+    }),
+  );
+  return response.data.note;
 }
 
-export async function deleteNote(noteId: string): Promise<void> {
-  await apiRequest(`/api/notes/${noteId}`, { method: "DELETE" });
+export async function deleteNote(
+  noteId: InferPathParam<
+    (typeof honoClient.api.notes)[":noteId"]["$delete"],
+    "noteId"
+  >,
+) {
+  await parseResponse(
+    honoClient.api.notes[":noteId"].$delete({
+      param: { noteId },
+    }),
+  );
 }

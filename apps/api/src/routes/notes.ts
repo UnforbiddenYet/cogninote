@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { z } from "zod";
+import * as v from "valibot";
+import { vValidator } from "@hono/valibot-validator";
 import {
   createNote,
   getNoteById,
@@ -12,172 +13,185 @@ import { requireAuth } from "../lib/middleware/auth";
 import { requireLightRAG } from "../lib/middleware/lightrag";
 import { getNoteEntities } from "../services/notes";
 
-const app = new Hono();
+const app = new Hono()
 
-const createNoteSchema = z.object({
-  title: z.string().min(1, "Title required"),
-  content: z.string().min(1, "Content required"),
-  color: z.string().optional(),
-});
+  // GET /api/notes
+  .get(
+    "/",
+    requireAuth(),
+    vValidator(
+      "query",
+      v.object({
+        limit: v.optional(v.pipe(v.string(), v.transform(Number)), "20"),
+        offset: v.optional(v.pipe(v.string(), v.transform(Number)), "0"),
+      }),
+    ),
+    async (c) => {
+      try {
+        const userId = c.get("userId");
+        const { limit: rawLimit, offset } = c.req.valid("query");
+        const limit = Math.min(rawLimit, 100);
 
-const updateNoteSchema = z.object({
-  title: z.string().min(1).optional(),
-  content: z.string().min(1).optional(),
-  color: z.string().optional(),
-  isArchived: z.boolean().optional(),
-});
+        const { notes, total } = await listNotes(userId, limit, offset);
 
-// GET /api/notes
-app.get("/", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const limit = Math.min(parseInt(c.req.query("limit") || "20"), 100);
-    const offset = parseInt(c.req.query("offset") || "0");
+        return c.json({
+          success: true,
+          data: { notes, total, limit, offset },
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to list notes";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
 
-    const { notes, total } = await listNotes(userId, limit, offset);
+  // POST /api/notes
+  .post(
+    "/",
+    requireAuth(),
+    vValidator(
+      "json",
+      v.object({
+        title: v.pipe(v.string(), v.minLength(1, "Title required")),
+        content: v.pipe(v.string(), v.minLength(1, "Content required")),
+        color: v.optional(v.string()),
+      }),
+    ),
+    async (c) => {
+      try {
+        const userId = c.get("userId");
+        const data = c.req.valid("json");
 
-    return c.json({
-      success: true,
-      data: { notes, total, limit, offset },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to list notes";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
+        const note = await createNote(userId, data);
 
-// POST /api/notes
-app.post("/", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const body = await c.req.json();
-    const data = createNoteSchema.parse(body);
+        return c.json(
+          {
+            success: true,
+            data: { note },
+          },
+          201,
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to create note";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
 
-    const note = await createNote(userId, data);
-
-    return c.json({
-      success: true,
-      data: { note },
-    }, 201);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return c.json(
-        { success: false, error: "Validation error", details: error.errors },
-        400
-      );
-    }
-    const message = error instanceof Error ? error.message : "Failed to create note";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// GET /api/notes/:id
-app.get("/:id", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const noteId = c.req.param("id");
-
-    const note = await getNoteById(userId, noteId);
-
-    if (!note) {
-      return c.json({ success: false, error: "Note not found" }, 404);
-    }
-
-    return c.json({
-      success: true,
-      data: { note },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to get note";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// PATCH /api/notes/:id
-app.patch("/:id", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const noteId = c.req.param("id");
-    const body = await c.req.json();
-    const data = updateNoteSchema.parse(body);
-
-    const note = await updateNote(userId, noteId, data);
-
-    if (!note) {
-      return c.json({ success: false, error: "Note not found" }, 404);
-    }
-
-    return c.json({
-      success: true,
-      data: { note },
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return c.json(
-        { success: false, error: "Validation error", details: error.errors },
-        400
-      );
-    }
-    const message = error instanceof Error ? error.message : "Failed to update note";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// DELETE /api/notes/:id
-app.delete("/:id", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const noteId = c.req.param("id");
-
-    const deleted = await deleteNote(userId, noteId);
-
-    if (!deleted) {
-      return c.json({ success: false, error: "Note not found" }, 404);
-    }
-
-    return c.json({
-      success: true,
-      message: "Note deleted",
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to delete note";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// GET /api/notes/:id/related
-app.get("/:id/related", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const noteId = c.req.param("id");
-
-    const note = await getNoteById(userId, noteId);
-    if (!note) {
-      return c.json({ success: false, error: "Note not found" }, 404);
-    }
-
-    const noteConnections = await getConnectionsForNote(userId, noteId);
-
-    return c.json({
-      success: true,
-      data: { connections: noteConnections },
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get related notes";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// GET /api/notes/:id/entities
-app.get(
-  "/:id/entities",
-  requireAuth(),
-  requireLightRAG(),
-  async (c: any) => {
+  // GET /api/notes/:noteId
+  .get("/:noteId", requireAuth(), async (c) => {
     try {
       const userId = c.get("userId");
-      const noteId = c.req.param("id");
+      const noteId = c.req.param("noteId");
+
+      const note = await getNoteById(userId, noteId);
+
+      if (!note) {
+        return c.json({ success: false, error: "Note not found" }, 404);
+      }
+
+      return c.json({
+        success: true,
+        data: { note },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to get note";
+      return c.json({ success: false, error: message }, 500);
+    }
+  })
+
+  // PATCH /api/notes/:noteId
+  .patch(
+    "/:noteId",
+    requireAuth(),
+    vValidator(
+      "json",
+      v.object({
+        title: v.optional(v.pipe(v.string(), v.minLength(1))),
+        content: v.optional(v.pipe(v.string(), v.minLength(1))),
+        color: v.optional(v.string()),
+        isArchived: v.optional(v.boolean()),
+      }),
+    ),
+    async (c) => {
+      try {
+        const userId = c.get("userId");
+        const noteId = c.req.param("noteId");
+        const data = c.req.valid("json");
+
+        const note = await updateNote(userId, noteId, data);
+
+        if (!note) {
+          return c.json({ success: false, error: "Note not found" }, 404);
+        }
+
+        return c.json({
+          success: true,
+          data: { note },
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to update note";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // DELETE /api/notes/:noteId
+  .delete("/:noteId", requireAuth(), async (c) => {
+    try {
+      const userId = c.get("userId");
+      const noteId = c.req.param("noteId");
+
+      const deleted = await deleteNote(userId, noteId);
+
+      if (!deleted) {
+        return c.json({ success: false, error: "Note not found" }, 404);
+      }
+
+      return c.json({
+        success: true,
+        message: "Note deleted",
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete note";
+      return c.json({ success: false, error: message }, 500);
+    }
+  })
+
+  // GET /api/notes/:noteId/related
+  .get("/:noteId/related", requireAuth(), async (c) => {
+    try {
+      const userId = c.get("userId");
+      const noteId = c.req.param("noteId");
+
+      const note = await getNoteById(userId, noteId);
+      if (!note) {
+        return c.json({ success: false, error: "Note not found" }, 404);
+      }
+
+      const noteConnections = await getConnectionsForNote(userId, noteId);
+
+      return c.json({
+        success: true,
+        data: { connections: noteConnections },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to get related notes";
+      return c.json({ success: false, error: message }, 500);
+    }
+  })
+
+  // GET /api/notes/:noteId/entities
+  .get("/:noteId/entities", requireAuth(), requireLightRAG(), async (c) => {
+    try {
+      const userId = c.get("userId");
+      const noteId = c.req.param("noteId");
 
       const note = await getNoteById(userId, noteId);
       if (!note) {
@@ -195,7 +209,6 @@ app.get(
         error instanceof Error ? error.message : "Failed to get note entities";
       return c.json({ success: false, error: message }, 500);
     }
-  },
-);
+  });
 
 export default app;

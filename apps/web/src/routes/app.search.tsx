@@ -1,7 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { NoteList } from "../components/notes/NoteList";
-import { apiRequest } from "../lib/api/apiClient";
 import { AIInsightPanel } from "../components/ai-insight-panel";
 
 export const Route = createFileRoute("/app/search")({

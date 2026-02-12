@@ -3,8 +3,19 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../../packages/shared/*"],
+      "@shared": ["../../packages/shared"],
+      "@api-server/hc": ["../api/src/hc"]
+    }
   },
+  "references": [
+    {
+      "path": "../api/tsconfig.json"
+    }
+  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
 }

@@ -1,16 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { executeSearchQuery } from "../lib/api/query";
 
+type ExecuteSearchQueryJson = Parameters<typeof executeSearchQuery>[0];
+
 export const searchKeys = {
   all: ["search"] as const,
-  query: (query: string) => [...searchKeys.all, query] as const,
+  query: (query: ExecuteSearchQueryJson["query"]) =>
+    [...searchKeys.all, query] as const,
 };
 
-export function useSearchQuery(query: string) {
+export function useSearchQuery(json: ExecuteSearchQueryJson) {
   return useQuery({
-    queryKey: searchKeys.query(query),
-    queryFn: () => executeSearchQuery(query),
-    enabled: !!query,
+    queryKey: searchKeys.query(json.query),
+    queryFn: () => executeSearchQuery(json),
+    enabled: !!json.query,
     staleTime: 5 * 60 * 1000,
   });
 }

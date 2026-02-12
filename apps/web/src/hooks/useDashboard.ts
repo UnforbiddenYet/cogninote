@@ -1,14 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboard, type TimeRange } from "../lib/api/dashboard";
+import { fetchDashboard } from "../lib/api/dashboard";
+
+type FetchDashboardQuery = Parameters<typeof fetchDashboard>[0];
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
-  byRange: (range: TimeRange) => [...dashboardKeys.all, range] as const,
+  byRange: (range: FetchDashboardQuery["timeRange"]) =>
+    [...dashboardKeys.all, range] as const,
 };
 
-export function useDashboard(timeRange: TimeRange = "7d") {
+export function useDashboard(query: FetchDashboardQuery) {
   return useQuery({
-    queryKey: dashboardKeys.byRange(timeRange),
-    queryFn: () => fetchDashboard(timeRange),
+    queryKey: dashboardKeys.byRange(query.timeRange),
+    queryFn: () => fetchDashboard(query),
   });
 }

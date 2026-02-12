@@ -1,18 +1,13 @@
 import { createMiddleware } from "hono/factory";
-import type { Context } from "hono";
 import { auth, type User } from "../auth";
 
-declare global {
-  namespace HonoRequest {
-    interface HonoRequest {
-      userId?: string;
-      user?: User;
-    }
-  }
-}
+export type AuthVariables = {
+  userId: string;
+  user: User;
+};
 
 export const requireAuth = () =>
-  createMiddleware(async (c: Context<any, any, {}>, next) => {
+  createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
     });
@@ -21,7 +16,6 @@ export const requireAuth = () =>
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Set userId and user for downstream handlers
     c.set("userId", session.user.id);
     c.set("user", session.user);
 

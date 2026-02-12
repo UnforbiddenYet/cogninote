@@ -27,7 +27,7 @@ function ReadonlyMarkdown({ content }: { content: string }) {
 
 export function AIInsightPanel() {
   const { submittedQuery } = useIslandStore()
-  const { data, isLoading, error } = useSearchQuery(submittedQuery);
+  const { data, isLoading, error } = useSearchQuery({ query: submittedQuery });
 
   if (!submittedQuery) return (
     <div className="p-12 rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg">

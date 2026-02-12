@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import * as v from "valibot";
+import { vValidator } from "@hono/valibot-validator";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware/auth";
 import { requireLightRAG } from "../lib/middleware/lightrag";
@@ -12,124 +14,138 @@ import {
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
 
-const app = new Hono();
+const app = new Hono()
 
-// GET /api/graph/entities/search
-app.get(
-  "/entities/search",
-  requireAuth(),
-  requireLightRAG(),
-  async (c: any) => {
-    try {
-      const userId = c.get("userId");
-      const query = c.req.query("q") || "";
-      const limit = Math.min(parseInt(c.req.query("limit") || "10"), 50);
-
-      if (!query) {
-        return c.json(
-          { success: false, error: "Query parameter 'q' is required" },
-          400,
-        );
-      }
-
-      const entities = await searchEntities(userId, query, limit);
-
-      return c.json({ success: true, data: { entities } });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Entity search failed";
-      return c.json({ success: false, error: message }, 500);
-    }
-  },
-);
-
-// GET /api/graph/entities/popular
-app.get(
-  "/entities/popular",
-  requireAuth(),
-  requireLightRAG(),
-  async (c: any) => {
-    try {
-      const userId = c.get("userId");
-      const limit = Math.min(parseInt(c.req.query("limit") || "20"), 50);
-
-      const entities = await getPopularEntities(userId, limit);
-
-      return c.json({ success: true, data: { entities } });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to get popular entities";
-      return c.json({ success: false, error: message }, 500);
-    }
-  },
-);
-
-// GET /api/graph/subgraph
-app.get("/subgraph", requireAuth(), requireLightRAG(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-    const label = c.req.query("label") || "";
-    const maxDepth = Math.min(parseInt(c.req.query("maxDepth") || "2"), 5);
-    const maxNodes = Math.min(parseInt(c.req.query("maxNodes") || "50"), 200);
-
-    if (!label) {
-      return c.json(
-        { success: false, error: "Query parameter 'label' is required" },
-        400,
-      );
-    }
-
-    const graph = await getSubgraph(userId, label, maxDepth, maxNodes);
-
-    return c.json({ success: true, data: { graph } });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get subgraph";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
-
-// GET /api/graph/stats
-app.get("/stats", requireAuth(), async (c: any) => {
-  try {
-    const userId = c.get("userId");
-
-    const [noteCountResult, connectionCountResult] = await Promise.all([
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(notes)
-        .where(and(eq(notes.userId, userId), eq(notes.isArchived, false))),
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(connections)
-        .where(eq(connections.userId, userId)),
-    ]);
-
-    let entityCount = 0;
-    if (LIGHTRAG_ENABLED) {
+  // GET /api/graph/entities/search
+  .get(
+    "/entities/search",
+    requireAuth(),
+    requireLightRAG(),
+    vValidator(
+      "query",
+      v.object({
+        q: v.pipe(v.string(), v.minLength(1)),
+        limit: v.optional(v.pipe(v.string(), v.transform(Number)), "10"),
+      }),
+    ),
+    async (c) => {
       try {
-        const labels = await getEntityLabels(userId);
-        entityCount = labels.length;
-      } catch {
-        // LightRAG unavailable
-      }
-    }
+        const userId = c.get("userId");
+        const { q, limit: rawLimit } = c.req.valid("query");
+        const limit = Math.min(rawLimit, 50);
 
-    return c.json({
-      success: true,
-      data: {
-        noteCount: noteCountResult[0]?.count || 0,
-        connectionCount: connectionCountResult[0]?.count || 0,
-        entityCount,
-      },
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get graph stats";
-    return c.json({ success: false, error: message }, 500);
-  }
-});
+        const entities = await searchEntities(userId, q, limit);
+
+        return c.json({ success: true, data: { entities } });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Entity search failed";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // GET /api/graph/entities/popular
+  .get(
+    "/entities/popular",
+    requireAuth(),
+    requireLightRAG(),
+    vValidator(
+      "query",
+      v.object({
+        limit: v.optional(v.pipe(v.string(), v.transform(Number)), "20"),
+      }),
+    ),
+    async (c) => {
+      try {
+        const userId = c.get("userId");
+        const { limit: rawLimit } = c.req.valid("query");
+        const limit = Math.min(rawLimit, 50);
+
+        const entities = await getPopularEntities(userId, limit);
+
+        return c.json({ success: true, data: { entities } });
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to get popular entities";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // GET /api/graph/subgraph
+  .get(
+    "/subgraph",
+    requireAuth(),
+    requireLightRAG(),
+    vValidator(
+      "query",
+      v.object({
+        label: v.pipe(v.string(), v.minLength(1)),
+        maxDepth: v.optional(v.pipe(v.string(), v.transform(Number)), "2"),
+        maxNodes: v.optional(v.pipe(v.string(), v.transform(Number)), "50"),
+      }),
+    ),
+    async (c) => {
+      try {
+        const userId = c.get("userId");
+        const { label, maxDepth: rawMaxDepth, maxNodes: rawMaxNodes } =
+          c.req.valid("query");
+        const maxDepth = Math.min(rawMaxDepth, 5);
+        const maxNodes = Math.min(rawMaxNodes, 200);
+
+        const graph = await getSubgraph(userId, label, maxDepth, maxNodes);
+
+        return c.json({ success: true, data: { graph } });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to get subgraph";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // GET /api/graph/stats
+  .get("/stats", requireAuth(), async (c) => {
+    try {
+      const userId = c.get("userId");
+
+      const [noteCountResult, connectionCountResult] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(notes)
+          .where(and(eq(notes.userId, userId), eq(notes.isArchived, false))),
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(connections)
+          .where(eq(connections.userId, userId)),
+      ]);
+
+      let entityCount = 0;
+      if (LIGHTRAG_ENABLED) {
+        try {
+          const labels = await getEntityLabels(userId);
+          entityCount = labels.length;
+        } catch {
+          // LightRAG unavailable
+        }
+      }
+
+      return c.json({
+        success: true,
+        data: {
+          noteCount: noteCountResult[0]?.count || 0,
+          connectionCount: connectionCountResult[0]?.count || 0,
+          entityCount,
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to get graph stats";
+      return c.json({ success: false, error: message }, 500);
+    }
+  });
 
 export default app;

@@ -6,14 +6,16 @@ import {
   deleteNote,
 } from "../lib/api/notes";
 
+type FetchNoteNoteId = Parameters<typeof fetchNote>[0];
+
 // Query keys factory
 export const noteKeys = {
   all: ["notes"] as const,
-  detail: (id: string) => [...noteKeys.all, "detail", id] as const,
+  detail: (id: FetchNoteNoteId) => [...noteKeys.all, "detail", id] as const,
 };
 
 // Query Hooks
-export function useNote(noteId: string) {
+export function useNote(noteId: FetchNoteNoteId) {
   return useQuery({
     queryKey: noteKeys.detail(noteId),
     queryFn: () => fetchNote(noteId),
@@ -26,13 +28,7 @@ export function useUpdateNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      noteId,
-      updates,
-    }: {
-      noteId: string;
-      updates: { title?: string; content?: string };
-    }) => updateNote(noteId, updates),
+    mutationFn: updateNote,
     onSuccess: (data) => {
       // Invalidate the specific note query
       queryClient.invalidateQueries({
@@ -46,13 +42,7 @@ export function useCreateNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      title,
-      content,
-    }: {
-      title: string;
-      content?: string;
-    }) => createNote(title, content),
+    mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
     },
@@ -63,7 +53,7 @@ export function useDeleteNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (noteId: string) => deleteNote(noteId),
+    mutationFn: deleteNote,
     onSuccess: () => {
       // Invalidate all notes queries
       queryClient.invalidateQueries({

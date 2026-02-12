@@ -1,28 +1,12 @@
-import { apiRequest } from "./apiClient";
-
-export interface QueryResult {
-  answer: string;
-  sources: Array<{
-    noteId: string;
-    title: string;
-    summary: string;
-  }>;
-  metadata: {
-    processingTimeMs: number;
-    mode: string;
-  };
-}
+import { honoClient, type InferReqJson, parseResponse } from "./apiClient";
 
 export async function executeSearchQuery(
-  query: string,
-  maxSources: number = 10,
-): Promise<QueryResult> {
-  const result = await apiRequest<{
-    success: boolean;
-    data: QueryResult;
-  }>("/api/query", {
-    method: "POST",
-    body: JSON.stringify({ query, maxSources }),
-  });
-  return result.data;
+  json: InferReqJson<(typeof honoClient.api.query)["$post"]>,
+) {
+  const response = await parseResponse(
+    honoClient.api.query.$post({
+      json,
+    }),
+  );
+  return response.data;
 }
