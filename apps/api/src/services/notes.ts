@@ -7,7 +7,6 @@ import {
   reindexNote as reindexNoteInLightRAG,
   searchEntities,
   getSubgraph,
-  LIGHTRAG_ENABLED,
 } from "./lightrag";
 
 type CreateNoteInput = {
@@ -57,14 +56,11 @@ export async function createNote(
 
   const note = result[0];
 
-  // Index in LightRAG (fire-and-forget)
-  if (LIGHTRAG_ENABLED) {
-    indexNoteInLightRAG(userId, note.id, note.title, note.content).catch(
-      (err) => {
-        console.error(`Failed to index note ${note.id} in LightRAG:`, err);
-      },
-    );
-  }
+  indexNoteInLightRAG(userId, note.id, note.title, note.content).catch(
+    (err) => {
+      console.error(`Failed to index note ${note.id} in LightRAG:`, err);
+    },
+  );
 
   return {
     id: note.id,
@@ -203,10 +199,7 @@ export async function updateNote(
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
   // Re-index in LightRAG if title or content changed
-  if (
-    LIGHTRAG_ENABLED &&
-    (input.title !== undefined || input.content !== undefined)
-  ) {
+  if (input.title !== undefined || input.content !== undefined) {
     const updatedNote = await getNoteById(userId, noteId);
     if (updatedNote) {
       reindexNoteInLightRAG(
@@ -245,11 +238,9 @@ export async function deleteNote(
   await db.update(notes).set({ isArchived: true }).where(eq(notes.id, noteId));
 
   // Remove from LightRAG index
-  if (LIGHTRAG_ENABLED) {
-    deleteNoteFromLightRAG(userId, noteId).catch((err) => {
-      console.error(`Failed to delete note ${noteId} from LightRAG:`, err);
-    });
-  }
+  deleteNoteFromLightRAG(userId, noteId).catch((err) => {
+    console.error(`Failed to delete note ${noteId} from LightRAG:`, err);
+  });
 
   return true;
 }

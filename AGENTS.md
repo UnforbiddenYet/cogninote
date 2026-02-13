@@ -5,7 +5,7 @@ AI-first Personal Knowledge Base
 - **Backend Stack**: Hono + Drizzle ORM + PostgreSQL + Zod + Bun runtime + Docker
 - **Pattern**: `routes/` (HTTP + validation) → `services/` (business logic) → `db/` (schema + connection)
 - **Auth**: `requireAuth()` middleware → `c.get("userId")`. Handlers typed `c: any`.
-- **LightRAG**: `requireLightRAG()` returns 503 when disabled. Fire-and-forget indexing.
+- **LightRAG**: Fire-and-forget document indexing.
 - **Typecheck**: `bun run typecheck` from `apps/api/`
 - **DB push**: `bun run db:push` from `apps/api/` (no migration files)
 

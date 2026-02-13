@@ -8,7 +8,6 @@
 // Configuration
 const LIGHTRAG_API_URL =
   process.env.LIGHTRAG_API_URL || "http://localhost:8020";
-const LIGHTRAG_ENABLED = process.env.LIGHTRAG_ENABLED === "true";
 const LIGHTRAG_TIMEOUT_MS = parseInt(
   process.env.LIGHTRAG_TIMEOUT_MS || "30000",
 );
@@ -103,11 +102,6 @@ async function makeRequest<T>(
   body?: any,
   timeoutMs: number = LIGHTRAG_TIMEOUT_MS,
 ): Promise<T | null> {
-  if (!LIGHTRAG_ENABLED) {
-    console.log("LightRAG is disabled");
-    return null;
-  }
-
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -379,10 +373,6 @@ export async function searchSemantic(
  * Generate a summary for content using LightRAG
  */
 export async function generateSummary(content: string): Promise<string | null> {
-  if (!LIGHTRAG_ENABLED) {
-    return null;
-  }
-
   try {
     const result = await retryWithBackoff(() =>
       makeRequest<any>(
@@ -425,10 +415,6 @@ export async function reindexNote(
  * Check if LightRAG service is healthy
  */
 export async function healthCheck(): Promise<boolean> {
-  if (!LIGHTRAG_ENABLED) {
-    return false;
-  }
-
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -718,6 +704,3 @@ export async function queryRAG(
     return null;
   }
 }
-
-// Export configuration for use in other modules
-export { LIGHTRAG_ENABLED, LIGHTRAG_API_URL };

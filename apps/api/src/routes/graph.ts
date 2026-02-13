@@ -3,13 +3,11 @@ import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/middleware/auth";
-import { requireLightRAG } from "../lib/middleware/lightrag";
 import {
   searchEntities,
   getPopularEntities,
   getSubgraph,
   getEntityLabels,
-  LIGHTRAG_ENABLED,
 } from "../services/lightrag";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
@@ -20,7 +18,6 @@ const app = new Hono()
   .get(
     "/entities/search",
     requireAuth(),
-    requireLightRAG(),
     vValidator(
       "query",
       v.object({
@@ -49,7 +46,6 @@ const app = new Hono()
   .get(
     "/entities/popular",
     requireAuth(),
-    requireLightRAG(),
     vValidator(
       "query",
       v.object({
@@ -79,7 +75,6 @@ const app = new Hono()
   .get(
     "/subgraph",
     requireAuth(),
-    requireLightRAG(),
     vValidator(
       "query",
       v.object({
@@ -91,8 +86,11 @@ const app = new Hono()
     async (c) => {
       try {
         const userId = c.get("userId");
-        const { label, maxDepth: rawMaxDepth, maxNodes: rawMaxNodes } =
-          c.req.valid("query");
+        const {
+          label,
+          maxDepth: rawMaxDepth,
+          maxNodes: rawMaxNodes,
+        } = c.req.valid("query");
         const maxDepth = Math.min(rawMaxDepth, 5);
         const maxNodes = Math.min(rawMaxNodes, 200);
 
@@ -124,13 +122,11 @@ const app = new Hono()
       ]);
 
       let entityCount = 0;
-      if (LIGHTRAG_ENABLED) {
-        try {
-          const labels = await getEntityLabels(userId);
-          entityCount = labels.length;
-        } catch {
-          // LightRAG unavailable
-        }
+      try {
+        const labels = await getEntityLabels(userId);
+        entityCount = labels.length;
+      } catch {
+        // LightRAG unavailable
       }
 
       return c.json({

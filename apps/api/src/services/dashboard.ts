@@ -1,8 +1,11 @@
 import { eq, and, sql, gte, desc } from "drizzle-orm";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
-import { getPopularEntities, LIGHTRAG_ENABLED } from "./lightrag";
-import { getConnectionSuggestions, generateConnectionSuggestions } from "./suggestions";
+import { getPopularEntities } from "./lightrag";
+import {
+  getConnectionSuggestions,
+  generateConnectionSuggestions,
+} from "./suggestions";
 import { getConnectionCount } from "./connections";
 
 type TimeRange = "1d" | "7d" | "30d";
@@ -19,7 +22,10 @@ function getStartDate(range: TimeRange): Date {
   }
 }
 
-export async function getDashboardData(userId: string, timeRange: TimeRange = "7d") {
+export async function getDashboardData(
+  userId: string,
+  timeRange: TimeRange = "7d",
+) {
   const startDate = getStartDate(timeRange);
 
   // Run all DB queries in parallel
@@ -132,19 +138,17 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
   let topEntities: Array<{ label: string; count: number }> = [];
   let suggestedConnections: any[] = [];
 
-  if (LIGHTRAG_ENABLED) {
-    try {
-      topEntities = await getPopularEntities(userId, 10);
-    } catch {
-      // LightRAG unavailable, continue with empty
-    }
+  try {
+    topEntities = await getPopularEntities(userId, 10);
+  } catch {
+    // LightRAG unavailable, continue with empty
   }
 
   try {
     suggestedConnections = await getConnectionSuggestions(userId, 3);
 
     // Auto-generate suggestions if none exist and LightRAG is available
-    if (suggestedConnections.length === 0 && LIGHTRAG_ENABLED) {
+    if (suggestedConnections.length === 0) {
       generateConnectionSuggestions(userId, 5).catch((err) =>
         console.error("Failed to auto-generate suggestions:", err),
       );

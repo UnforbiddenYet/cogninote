@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
 import { requireAuth } from "../lib/middleware/auth";
-import { requireLightRAG } from "../lib/middleware/lightrag";
 import {
   generateConnectionSuggestions,
   getConnectionSuggestions,
@@ -40,28 +39,23 @@ const app = new Hono()
   )
 
   // POST /api/suggestions/connections/generate
-  .post(
-    "/connections/generate",
-    requireAuth(),
-    requireLightRAG(),
-    async (c) => {
-      try {
-        const userId = c.get("userId");
-        const count = await generateConnectionSuggestions(userId);
+  .post("/connections/generate", requireAuth(), async (c) => {
+    try {
+      const userId = c.get("userId");
+      const count = await generateConnectionSuggestions(userId);
 
-        return c.json({
-          success: true,
-          data: { generatedCount: count },
-        });
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to generate suggestions";
-        return c.json({ success: false, error: message }, 500);
-      }
-    },
-  )
+      return c.json({
+        success: true,
+        data: { generatedCount: count },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate suggestions";
+      return c.json({ success: false, error: message }, 500);
+    }
+  })
 
   // POST /api/suggestions/:id/accept
   .post("/:id/accept", requireAuth(), async (c) => {

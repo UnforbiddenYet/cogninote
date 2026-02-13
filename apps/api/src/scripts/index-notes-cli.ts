@@ -10,7 +10,7 @@
 import { db } from "../db";
 import { notes } from "../db/schema";
 import { eq, and } from "drizzle-orm";
-import { indexNote, LIGHTRAG_ENABLED } from "../services/lightrag";
+import { indexNote } from "../services/lightrag";
 import { select, checkbox, input, confirm } from "@inquirer/prompts";
 import { readFile } from "fs/promises";
 import { join } from "path";
@@ -30,12 +30,6 @@ async function getUserId(): Promise<string> {
 
 async function main() {
   console.log("🔍 Interactive Note Indexing Tool\n");
-
-  if (!LIGHTRAG_ENABLED) {
-    console.error("❌ LightRAG is not enabled");
-    console.error("   Set LIGHTRAG_ENABLED=true in .env");
-    process.exit(1);
-  }
 
   try {
     // Get user ID

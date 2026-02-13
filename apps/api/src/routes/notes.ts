@@ -10,7 +10,6 @@ import {
 } from "../services/notes";
 import { getConnectionsForNote } from "../services/connections";
 import { requireAuth } from "../lib/middleware/auth";
-import { requireLightRAG } from "../lib/middleware/lightrag";
 import { getNoteEntities } from "../services/notes";
 
 const app = new Hono()
@@ -188,7 +187,7 @@ const app = new Hono()
   })
 
   // GET /api/notes/:noteId/entities
-  .get("/:noteId/entities", requireAuth(), requireLightRAG(), async (c) => {
+  .get("/:noteId/entities", requireAuth(), async (c) => {
     try {
       const userId = c.get("userId");
       const noteId = c.req.param("noteId");

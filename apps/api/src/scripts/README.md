@@ -30,7 +30,6 @@ bun run src/scripts/reindex-notes.ts
 Make sure these are set in the `.env`:
 
 ```env
-LIGHTRAG_ENABLED=true
 LIGHTRAG_API_URL=http://localhost:8020
 DATABASE_URL=postgresql://...
 API_URL=http://localhost:3001

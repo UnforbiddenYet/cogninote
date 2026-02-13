@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
 import { requireAuth } from "../lib/middleware/auth";
-import { requireLightRAG } from "../lib/middleware/lightrag";
 import { executeQuery } from "../services/query";
 import { logQuery, getQueryHistory } from "../services/queryHistory";
 
@@ -11,7 +10,6 @@ const app = new Hono()
   .post(
     "/",
     requireAuth(),
-    requireLightRAG(),
     vValidator(
       "json",
       v.object({

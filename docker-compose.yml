@@ -19,25 +19,11 @@ services:
       - mindgraph_network
 
   lightrag:
-    build:
-      context: .
-      dockerfile: docker/lightrag/Dockerfile
+    image: ghcr.io/hkuds/lightrag:v1.4.9.11
     container_name: mindgraph_lightrag
     ports:
       - "8020:8020"
-    environment:
-      RAG_DIR: /app/rag_storage
-      INPUT_DIR: /app/inputs
-      VERBOSE_DEBUG: ${VERBOSE_DEBUG}
-      LLM_BINDING: ${LLM_BINDING}
-      LLM_BINDING_HOST: ${LLM_BINDING_HOST}
-      LLM_MODEL: ${LLM_MODEL}
-      LLM_BINDING_API_KEY: ${LLM_BINDING_API_KEY}
-      EMBEDDING_BINDING: ${EMBEDDING_BINDING}
-      EMBEDDING_BINDING_HOST: ${EMBEDDING_BINDING_HOST}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
-      EMBEDDING_BINDING_API_KEY: ${EMBEDDING_BINDING_API_KEY}
-      EMBEDDING_DIM: ${EMBEDDING_DIM}
+    env_file: ".env.lightrag"
     volumes:
       - lightrag_rag_storage:/app/rag_storage
       - lightrag_inputs:/app/inputs
