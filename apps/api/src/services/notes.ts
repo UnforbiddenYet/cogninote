@@ -30,9 +30,15 @@ export function extractTitle(content: string): string {
 
 const plainMarked = new Marked({
   renderer: {
-    heading({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
-    paragraph({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
-    listitem({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
+    heading({ tokens }) {
+      return this.parser.parseInline(tokens) + "\n";
+    },
+    paragraph({ tokens }) {
+      return this.parser.parseInline(tokens) + "\n";
+    },
+    listitem({ tokens }) {
+      return this.parser.parseInline(tokens) + "\n";
+    },
     link: ({ text }) => text,
     image: () => "",
     code: () => "",
@@ -77,12 +83,15 @@ export async function createNote(
     .returning();
 
   const note = result[0];
+  const previewContent = toPreview(note.content);
 
-  indexNoteInLightRAG(userId, note.id, note.title, note.content).catch(
-    (err) => {
-      console.error(`Failed to index note ${note.id} in LightRAG:`, err);
-    },
-  );
+  if (previewContent.length) {
+    indexNoteInLightRAG(userId, note.id, note.title, note.content).catch(
+      (err) => {
+        console.error(`Failed to index note ${note.id} in LightRAG:`, err);
+      },
+    );
+  }
 
   return {
     id: note.id,

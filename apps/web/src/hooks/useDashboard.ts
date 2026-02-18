@@ -14,5 +14,6 @@ export function useDashboard(query: FetchDashboardQuery) {
     queryKey: dashboardKeys.byRange(query.timeRange),
     queryFn: () => fetchDashboard(query),
     placeholderData: keepPreviousData,
+    staleTime: 0,
   });
 }
