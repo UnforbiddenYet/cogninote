@@ -30,8 +30,8 @@ export function extractTitle(content: string): string {
 
 const plainMarked = new Marked({
   renderer: {
-    heading: ({ text }) => `${text}\n`,
-    paragraph: ({ text }) => `${text}\n`,
+    heading({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
+    paragraph({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
     listitem({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
     link: ({ text }) => text,
     image: () => "",

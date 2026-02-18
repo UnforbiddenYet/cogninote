@@ -6,6 +6,7 @@ interface IslandStore {
   isAIExpanded: boolean;
   setQuery: (query: string) => void;
   submitQuery: () => void;
+  submitQueryDirect: (query: string) => void;
   setIsAIExpanded: (expanded: boolean) => void;
   reset: () => void;
 }
@@ -20,6 +21,7 @@ export const useIslandStore = create<IslandStore>((set, get) => ({
   ...initialState,
   setQuery: (query) => set({ query }),
   submitQuery: () => set({ submittedQuery: get().query.trim() }),
+  submitQueryDirect: (query) => set({ query, submittedQuery: query.trim() }),
   setIsAIExpanded: (isAIExpanded) => set({ isAIExpanded }),
   reset: () => set({ query: "", submittedQuery: "", isAIExpanded: false }),
 }));

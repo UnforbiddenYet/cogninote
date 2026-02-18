@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
 import { requireAuth } from "../lib/middleware/auth";
 import { executeQuery } from "../services/query";
+import { toPreview } from "../services/notes";
 import { logQuery, getQueryHistory } from "../services/queryHistory";
 
 const app = new Hono()
@@ -48,7 +49,7 @@ const app = new Hono()
           userId,
           data.query,
           mode,
-          result.answer.substring(0, 500),
+          toPreview(result.answer, 300),
           result.sources.length,
           result.metadata.processingTimeMs,
         ).catch((err) => console.error("Failed to log query:", err));

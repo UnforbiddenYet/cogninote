@@ -3,29 +3,13 @@ import { useIslandStore } from '../stores/island'
 import { useSearchQuery } from '../hooks/useSearch'
 import { NoteCard } from './notes/NoteCard'
 import { MarkdownEditor } from './editor/MarkdownEditor'
+import { SearchHistory } from './search/SearchHistory'
 
 export function InsightsPanel() {
-  const { submittedQuery } = useIslandStore()
+  const submittedQuery = useIslandStore(state => state.submittedQuery)
   const { data, isLoading, error } = useSearchQuery({ query: submittedQuery });
 
-  if (!submittedQuery) return (
-    <div className="max-w-5xl mx-auto space-y-5">
-
-      <div className="p-12 rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg">
-        <div className="text-center">
-          <div className="inline-flex p-4 rounded-full bg-primary/10 mb-4">
-            <Sparkles className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Ask Your Second Brain
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Use the AI search above to query your knowledge base
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+  if (!submittedQuery) return <SearchHistory />
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
