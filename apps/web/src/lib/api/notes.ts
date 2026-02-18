@@ -1,9 +1,19 @@
 import {
   honoClient,
   type InferReqJson,
+  type InferReqQuery,
   type InferPathParam,
   parseResponse,
 } from "./apiClient";
+
+export async function fetchNotes(
+  query: InferReqQuery<(typeof honoClient.api.notes)["$get"]>,
+) {
+  const response = await parseResponse(
+    honoClient.api.notes.$get({ query }),
+  );
+  return response.data;
+}
 
 export async function fetchNote(
   noteId: InferPathParam<

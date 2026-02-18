@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
+  fetchNotes,
   fetchNote,
   updateNote,
   createNote,
@@ -7,14 +8,25 @@ import {
 } from "../lib/api/notes";
 
 type FetchNoteNoteId = Parameters<typeof fetchNote>[0];
+type FetchNotesQuery = Parameters<typeof fetchNotes>[0];
 
 // Query keys factory
 export const noteKeys = {
   all: ["notes"] as const,
+  list: (params: FetchNotesQuery) => [...noteKeys.all, "list", params] as const,
   detail: (id: FetchNoteNoteId) => [...noteKeys.all, "detail", id] as const,
 };
 
 // Query Hooks
+export function useNotes(params: FetchNotesQuery) {
+  return useQuery({
+    queryKey: noteKeys.list(params),
+    queryFn: () => fetchNotes(params),
+    staleTime: 0,
+    placeholderData: keepPreviousData,
+  });
+}
+
 export function useNote(noteId: FetchNoteNoteId) {
   return useQuery({
     queryKey: noteKeys.detail(noteId),
@@ -30,10 +42,7 @@ export function useUpdateNote() {
   return useMutation({
     mutationFn: updateNote,
     onSuccess: (data) => {
-      // Invalidate the specific note query
-      queryClient.invalidateQueries({
-        queryKey: noteKeys.detail(data.id),
-      });
+      queryClient.setQueryData(noteKeys.detail(data.id), data);
     },
   });
 }
@@ -55,7 +64,6 @@ export function useDeleteNote() {
   return useMutation({
     mutationFn: deleteNote,
     onSuccess: () => {
-      // Invalidate all notes queries
       queryClient.invalidateQueries({
         queryKey: noteKeys.all,
       });

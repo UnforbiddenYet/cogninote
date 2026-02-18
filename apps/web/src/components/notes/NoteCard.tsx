@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Link2 } from "lucide-react";
+import { Link2, Trash2 } from "lucide-react";
 
 import { features } from "../../lib/features";
 
@@ -11,18 +11,37 @@ type Note = {
   connectionCount?: number;
 };
 
-export function NoteCard({ note }: { note: Note }) {
+export function NoteCard({
+  note,
+  onDelete,
+}: {
+  note: Note;
+  onDelete?: () => void;
+}) {
   return (
     <Link
       to="/app/notes/$noteId"
       params={{ noteId: note.id }}
-      className="block p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-border transition-all cursor-pointer"
+      className="group block p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-border transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between mb-0.5">
         <div className="text-sm font-medium text-foreground">
           {note.title}
         </div>
         <div className="flex items-center gap-2">
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-all cursor-pointer"
+              aria-label="Delete note"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
           {features.connections && note.connectionCount && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Link2 className="h-3 w-3" />

@@ -1,9 +1,8 @@
 import React from "react"
 import { useRef, useEffect } from 'react'
-
-import { Plus, Sparkles, Network, X, FolderOpen, Home, Send } from 'lucide-react'
-import { useIslandStore } from '../../stores/island'
+import { Plus, Sparkles, Network, X, FolderOpen, Home } from 'lucide-react'
 import { useNavigate, useMatchRoute } from "@tanstack/react-router"
+import { useIslandStore } from '../../stores/island'
 
 export function MagicIsland() {
   const navigate = useNavigate();
@@ -155,11 +154,12 @@ export function MagicIsland() {
               {isNotes && <span className="text-sm font-medium">Notes</span>}
             </button>
 
-            {/* Right Button - Knowledge Graph */}
+            {/* Right Button - Knowledge Graph disabled for now */}
             <button
               type="button"
+              disabled
               onClick={handleRightAction}
-              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all ${isGraph
+              className={`flex items-center gap-2 px-4 py-3 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed ${isGraph
                 ? 'bg-primary text-primary-foreground'
                 : 'hover:bg-accent text-muted-foreground hover:text-foreground'
                 }`}

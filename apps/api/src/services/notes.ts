@@ -1,4 +1,5 @@
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { Marked } from "marked";
 import { db } from "../db";
 import { notes } from "../db/schema";
 import {
@@ -9,23 +10,12 @@ import {
   getSubgraph,
 } from "./lightrag";
 
-type CreateNoteInput = {
-  content: string;
-  color?: string;
-};
-
-type UpdateNoteInput = {
-  content?: string;
-  color?: string;
-  isArchived?: boolean;
-  summary?: string;
-};
-
 type Note = {
   id: string;
   userId: string;
   title: string;
   content: string;
+  preview: string;
   color?: string;
   isArchived: boolean;
   summary?: string;
@@ -38,17 +28,41 @@ export function extractTitle(content: string): string {
   return match ? match[1].trim() : "Untitled";
 }
 
+const plainMarked = new Marked({
+  renderer: {
+    heading: ({ text }) => `${text}\n`,
+    paragraph: ({ text }) => `${text}\n`,
+    listitem({ tokens }) { return this.parser.parseInline(tokens) + "\n"; },
+    link: ({ text }) => text,
+    image: () => "",
+    code: () => "",
+    codespan: ({ text }) => text,
+    blockquote: ({ text }) => text,
+    hr: () => "\n",
+    br: () => "\n",
+    html: () => "",
+    strong: ({ text }) => text,
+    em: ({ text }) => text,
+    del: ({ text }) => text,
+  },
+});
+
 export function toPreview(content: string, maxLength = 150): string {
-  return content
-    .replace(/^#\s+.+\n?/, "") // Remove first H1 (title)
-    .replace(/[#*_`[\]]/g, "") // Strip markdown syntax
-    .trim()
-    .substring(0, maxLength);
+  const withoutTitle = content.replace(/^#\s+.+\n?/, "");
+  const plain = (plainMarked.parse(withoutTitle) as string)
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plain.substring(0, maxLength);
 }
 
 export async function createNote(
   userId: string,
-  input: CreateNoteInput,
+  input: {
+    content: string;
+    color?: string;
+  },
 ): Promise<Note> {
   const title = extractTitle(input.content);
 
@@ -75,6 +89,7 @@ export async function createNote(
     userId: note.userId,
     title: note.title,
     content: note.content,
+    preview: toPreview(note.content),
     color: note.color || undefined,
     isArchived: note.isArchived,
     summary: note.summary || undefined,
@@ -104,6 +119,7 @@ export async function getNoteById(
     userId: note.userId,
     title: note.title,
     content: note.content,
+    preview: toPreview(note.content),
     color: note.color || undefined,
     isArchived: note.isArchived,
     summary: note.summary || undefined,
@@ -136,6 +152,7 @@ export async function getNotesByIds(
     userId: note.userId,
     title: note.title,
     content: note.content,
+    preview: toPreview(note.content),
     color: note.color || undefined,
     isArchived: note.isArchived,
     summary: note.summary || undefined,
@@ -169,6 +186,7 @@ export async function listNotes(
     userId: note.userId,
     title: note.title,
     content: note.content,
+    preview: toPreview(note.content),
     color: note.color || undefined,
     isArchived: note.isArchived,
     summary: note.summary || undefined,
@@ -182,7 +200,12 @@ export async function listNotes(
 export async function updateNote(
   userId: string,
   noteId: string,
-  input: UpdateNoteInput,
+  input: {
+    content?: string;
+    color?: string;
+    isArchived?: boolean;
+    summary?: string;
+  },
 ): Promise<Note | null> {
   const existing = await getNoteById(userId, noteId);
   if (!existing) {

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchDashboard } from "../lib/api/dashboard";
 
 type FetchDashboardQuery = Parameters<typeof fetchDashboard>[0];
@@ -13,5 +13,6 @@ export function useDashboard(query: FetchDashboardQuery) {
   return useQuery({
     queryKey: dashboardKeys.byRange(query.timeRange),
     queryFn: () => fetchDashboard(query),
+    placeholderData: keepPreviousData,
   });
 }
