@@ -7,6 +7,7 @@ import {
   generateConnectionSuggestions,
 } from "./suggestions";
 import { getConnectionCount } from "./connections";
+import { toPreview } from "./notes";
 
 type TimeRange = "1d" | "7d" | "30d";
 
@@ -107,9 +108,7 @@ export async function getDashboardData(
     recentNotesResult.map(async (note) => ({
       id: note.id,
       title: note.title,
-      preview:
-        note.content.substring(0, 150) +
-        (note.content.length > 150 ? "..." : ""),
+      preview: toPreview(note.content),
       updatedAt: note.updatedAt,
       connectionCount: await getConnectionCount(userId, note.id),
     })),

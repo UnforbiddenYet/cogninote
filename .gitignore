@@ -9,6 +9,7 @@ dist/
 .next/
 out/
 .tanstack
+tsconfig.tsbuildinfo
 
 # Seed outputs
 .seed-user-id

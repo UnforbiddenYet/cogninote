@@ -43,7 +43,6 @@ export const notes = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 512 }).notNull(),
     content: text("content").notNull(),
-    contentPlain: text("content_plain").notNull(),
     color: varchar("color", { length: 7 }),
     isArchived: boolean("is_archived").default(false).notNull(),
     summary: text("summary"),

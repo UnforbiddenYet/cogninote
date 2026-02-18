@@ -10,13 +10,11 @@ import {
 } from "./lightrag";
 
 type CreateNoteInput = {
-  title: string;
   content: string;
   color?: string;
 };
 
 type UpdateNoteInput = {
-  title?: string;
   content?: string;
   color?: string;
   isArchived?: boolean;
@@ -35,21 +33,31 @@ type Note = {
   updatedAt: Date;
 };
 
+export function extractTitle(content: string): string {
+  const match = content.match(/^#\s+(.+)/);
+  return match ? match[1].trim() : "Untitled";
+}
+
+export function toPreview(content: string, maxLength = 150): string {
+  return content
+    .replace(/^#\s+.+\n?/, "") // Remove first H1 (title)
+    .replace(/[#*_`[\]]/g, "") // Strip markdown syntax
+    .trim()
+    .substring(0, maxLength);
+}
+
 export async function createNote(
   userId: string,
   input: CreateNoteInput,
 ): Promise<Note> {
-  const contentPlain = input.content
-    .replace(/[#*_`[\]]/g, "")
-    .substring(0, 1000);
+  const title = extractTitle(input.content);
 
   const result = await db
     .insert(notes)
     .values({
       userId,
-      title: input.title,
+      title,
       content: input.content,
-      contentPlain,
       color: input.color,
     })
     .returning();
@@ -185,12 +193,9 @@ export async function updateNote(
     updatedAt: new Date(),
   };
 
-  if (input.title !== undefined) updateData.title = input.title;
   if (input.content !== undefined) {
     updateData.content = input.content;
-    updateData.contentPlain = input.content
-      .replace(/[#*_`[\]]/g, "")
-      .substring(0, 1000);
+    updateData.title = extractTitle(input.content);
   }
   if (input.color !== undefined) updateData.color = input.color;
   if (input.isArchived !== undefined) updateData.isArchived = input.isArchived;
@@ -198,8 +203,8 @@ export async function updateNote(
 
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
-  // Re-index in LightRAG if title or content changed
-  if (input.title !== undefined || input.content !== undefined) {
+  // Re-index in LightRAG if content changed
+  if (input.content !== undefined) {
     const updatedNote = await getNoteById(userId, noteId);
     if (updatedNote) {
       reindexNoteInLightRAG(

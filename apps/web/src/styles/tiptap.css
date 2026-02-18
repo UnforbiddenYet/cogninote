@@ -1,0 +1,129 @@
+.tiptap {
+  @apply text-gray-950;
+}
+
+.tiptap h1,
+.tiptap h2,
+.tiptap h3,
+.tiptap h4,
+.tiptap h5,
+.tiptap h6 {
+  @apply font-serif font-semibold text-gray-950;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.tiptap h1 {
+  @apply text-3xl mt-8 mb-4;
+}
+
+.tiptap h2 {
+  @apply text-2xl mt-6 mb-3 font-serif;
+}
+
+.tiptap h3 {
+  @apply text-xl mt-5 mb-2.5 font-serif;
+}
+
+.tiptap h4,
+.tiptap h5,
+.tiptap h6 {
+  @apply text-lg mt-4 mb-2;
+}
+
+.tiptap p {
+  @apply leading-8 text-base text-gray-900;
+  letter-spacing: 0.3px;
+}
+
+.tiptap a {
+  @apply text-blue-600 hover:underline cursor-pointer transition-colors;
+}
+
+.tiptap blockquote {
+  @apply border-l-4 border-blue-300 pl-5 text-gray-700 italic my-6 py-2;
+}
+
+.tiptap code {
+  @apply bg-gray-100 px-2 py-1 rounded font-mono text-sm text-gray-950 font-medium;
+}
+
+.tiptap pre {
+  @apply bg-gray-50 border border-gray-200 rounded-lg p-5 overflow-x-auto my-5;
+}
+
+.tiptap pre code {
+  @apply bg-transparent px-0 py-0 text-gray-950 font-mono text-sm;
+  color: inherit;
+}
+
+.tiptap ul,
+.tiptap ol {
+  @apply ml-7;
+}
+
+.tiptap li {
+  @apply mb-1 leading-7;
+}
+
+.tiptap li p {
+  @apply m-0;
+}
+
+.tiptap [data-type="taskList"] {
+  @apply list-none ml-0;
+}
+
+.tiptap [data-type="taskList"] li {
+  @apply flex gap-2 items-center;
+}
+
+.tiptap ul {
+  @apply list-disc;
+}
+
+.tiptap ol {
+  @apply list-decimal;
+}
+
+.tiptap hr {
+  @apply border-t border-gray-200 my-7;
+}
+
+.tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.tiptap table td,
+.tiptap table th {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.tiptap table th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.tiptap .mention {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background: #c7d2fe;
+  }
+}

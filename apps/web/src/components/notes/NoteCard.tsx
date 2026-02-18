@@ -1,37 +1,42 @@
 import { Link } from "@tanstack/react-router";
+import { Link2 } from "lucide-react";
+
+import { features } from "../../lib/features";
 
 type Note = {
   id: string;
   title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  color?: string;
+  preview: string;
+  updatedAt: string;
+  connectionCount?: number;
 };
 
 export function NoteCard({ note }: { note: Note }) {
-  const preview = note.content
-    .replace(/[#*_`[\]]/g, "")
-    .substring(0, 100)
-    .trim() + "...";
-
-  const date = new Date(note.updatedAt).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-
   return (
     <Link
       to="/app/notes/$noteId"
       params={{ noteId: note.id }}
-      className="card block transition-colors hover:bg-secondary"
-      style={note.color ? { borderLeftColor: note.color, borderLeftWidth: "4px" } : {}}
+      className="block p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-border transition-all cursor-pointer"
     >
-      <h3 className="mb-2 font-semibold text-foreground line-clamp-2">
-        {note.title}
-      </h3>
-      <p className="mb-3 text-sm text-muted line-clamp-2">{preview}</p>
-      <p className="text-xs text-muted">{date}</p>
+      <div className="flex items-center justify-between mb-0.5">
+        <div className="text-sm font-medium text-foreground">
+          {note.title}
+        </div>
+        <div className="flex items-center gap-2">
+          {features.connections && note.connectionCount && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Link2 className="h-3 w-3" />
+              <span>{note.connectionCount}</span>
+            </div>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {new Date(note.updatedAt).toLocaleDateString()}
+          </span>
+        </div>
+      </div>
+      <div className="text-xs text-muted-foreground line-clamp-1">
+        {note.preview}
+      </div>
     </Link>
   );
 }

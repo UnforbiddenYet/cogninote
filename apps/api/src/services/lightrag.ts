@@ -689,6 +689,8 @@ export async function queryRAG(
           mode,
           top_k: topK,
           include_references: true,
+          user_prompt:
+            "Do not include source references (【1】【2】etc) in the answer main body",
         },
         LIGHTRAG_LLM_TIMEOUT_MS,
       ),

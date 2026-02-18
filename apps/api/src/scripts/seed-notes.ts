@@ -59,14 +59,10 @@ async function seedNotes() {
       const title =
         firstLine.replace(/^#\s*/, "").trim() || fileName.replace(".md", "");
 
-      // Create note
-      const contentPlain = content.replace(/[#*_`[\]]/g, "").substring(0, 1000);
-
       await db.insert(notes).values({
         userId,
         title,
         content,
-        contentPlain,
       });
 
       console.log(`✅ Created: ${title}`);
