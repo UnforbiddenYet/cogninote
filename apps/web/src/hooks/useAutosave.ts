@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useEditorStore } from "../stores/editor";
 import { useUpdateNote } from "./useNotes";
+import { deleteNote } from "../lib/api/notes";
 
 const DEBOUNCE_MS = 2000;
 const PERIODIC_MS = 30000;
@@ -41,8 +42,12 @@ export function useAutosave(noteId: string) {
     return () => {
       clearInterval(periodicTimer.current);
       clearTimeout(debounceTimer.current);
-      // Flush on unmount (fire-and-forget)
-      save();
+      const { content } = useEditorStore.getState();
+      if (!content.trim()) {
+        deleteNote(noteId).catch(() => {});
+      } else {
+        save();
+      }
     };
   }, [noteId]);
 
