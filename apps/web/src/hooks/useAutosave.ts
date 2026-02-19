@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useEditorStore } from "../stores/editor";
 import { useUpdateNote } from "./useNotes";
 import { deleteNote } from "../lib/api/notes";
@@ -16,9 +16,8 @@ export function useAutosave(noteId: string) {
   const periodicTimer = useRef<ReturnType<typeof setInterval>>();
   const isSaving = useRef(false);
 
-  const save = async () => {
-    const { hasUnsavedChanges, content, saveSuccess } =
-      useEditorStore.getState();
+  const save = useCallback(async () => {
+    const { hasUnsavedChanges, content, saveSuccess } = useEditorStore.getState();
     if (!hasUnsavedChanges || !content.trim() || isSaving.current) return;
 
     isSaving.current = true;
@@ -30,7 +29,7 @@ export function useAutosave(noteId: string) {
     } finally {
       isSaving.current = false;
     }
-  };
+  }, [noteId, updateNote]);
 
   const scheduleSave = () => {
     clearTimeout(debounceTimer.current);
@@ -49,7 +48,7 @@ export function useAutosave(noteId: string) {
         save();
       }
     };
-  }, [noteId]);
+  }, [noteId, save]);
 
   return { scheduleSave, saving: updateNote.isPending };
 }

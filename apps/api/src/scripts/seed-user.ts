@@ -11,8 +11,8 @@
  *   Password: password123
  */
 
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { db } from "../db";
 import { user } from "../db/auth-schema";
 import { auth } from "../lib/auth";
@@ -40,7 +40,7 @@ async function seedUser() {
     const { id: userId } = response.user;
     await writeFile(SEED_FILE, userId, "utf-8");
     console.log(`User ID: ${userId}`);
-    console.log("\n" + "─".repeat(40));
+    console.log(`\n${"─".repeat(40)}`);
     console.log("🔐 Login credentials:");
     console.log(`   Email:    ${SEED_USER_EMAIL}`);
     console.log(`   Password: ${SEED_PASSWORD}`);

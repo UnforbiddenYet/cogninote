@@ -27,9 +27,7 @@ export async function executeQuery(
     };
   });
 
-  const filteredSources = sources.filter(
-    (s): s is NonNullable<typeof s> => s !== null,
-  );
+  const filteredSources = sources.filter((s): s is NonNullable<typeof s> => s !== null);
 
   return {
     answer: response.answer,

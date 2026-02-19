@@ -109,11 +109,7 @@ export async function generateConnectionSuggestions(
     if (!sourceNote || !targetNote) continue;
 
     // Skip if connection already exists
-    const exists = await connectionExists(
-      userId,
-      sourceNote.id,
-      targetNote.id,
-    );
+    const exists = await connectionExists(userId, sourceNote.id, targetNote.id);
     if (exists) continue;
 
     // Skip if this pair was already suggested (pending or rejected)
@@ -155,10 +151,7 @@ export async function generateConnectionSuggestions(
   return created;
 }
 
-export async function getConnectionSuggestions(
-  userId: string,
-  limit: number = 5,
-) {
+export async function getConnectionSuggestions(userId: string, limit: number = 5) {
   return db
     .select()
     .from(aiSuggestions)
@@ -176,12 +169,7 @@ export async function acceptSuggestion(userId: string, suggestionId: string) {
   const [suggestion] = await db
     .select()
     .from(aiSuggestions)
-    .where(
-      and(
-        eq(aiSuggestions.id, suggestionId),
-        eq(aiSuggestions.userId, userId),
-      ),
-    )
+    .where(and(eq(aiSuggestions.id, suggestionId), eq(aiSuggestions.userId, userId)))
     .limit(1);
 
   if (!suggestion) return null;
@@ -206,19 +194,11 @@ export async function acceptSuggestion(userId: string, suggestionId: string) {
   return connection;
 }
 
-export async function dismissSuggestion(
-  userId: string,
-  suggestionId: string,
-) {
+export async function dismissSuggestion(userId: string, suggestionId: string) {
   const result = await db
     .update(aiSuggestions)
     .set({ status: "rejected" })
-    .where(
-      and(
-        eq(aiSuggestions.id, suggestionId),
-        eq(aiSuggestions.userId, userId),
-      ),
-    )
+    .where(and(eq(aiSuggestions.id, suggestionId), eq(aiSuggestions.userId, userId)))
     .returning();
 
   return result.length > 0;

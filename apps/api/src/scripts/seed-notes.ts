@@ -10,10 +10,10 @@
  *   bun run src/scripts/seed-notes.ts  # Then, seed notes
  */
 
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { db } from "../db";
 import { notes } from "../db/schema";
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
 
 const SEEDS_DIR = join(import.meta.dir, "./seeds/notes");
 const SEED_USER_FILE = join(import.meta.dir, "./seeds/.seed-user-id");
@@ -47,7 +47,7 @@ async function seedNotes() {
 
     // Create notes
     let created = 0;
-    let skipped = 0;
+    const skipped = 0;
 
     for (let i = 0; i < mdFiles.length; i++) {
       const fileName = mdFiles[i];
@@ -56,8 +56,7 @@ async function seedNotes() {
 
       // Extract title from first line (# Title)
       const firstLine = content.split("\n")[0];
-      const title =
-        firstLine.replace(/^#\s*/, "").trim() || fileName.replace(".md", "");
+      const title = firstLine.replace(/^#\s*/, "").trim() || fileName.replace(".md", "");
 
       await db.insert(notes).values({
         userId,
@@ -70,7 +69,7 @@ async function seedNotes() {
     }
 
     // Summary
-    console.log("\n" + "─".repeat(40));
+    console.log(`\n${"─".repeat(40)}`);
     console.log(`✨ Done! Created: ${created}, Skipped: ${skipped}`);
   } catch (error) {
     console.error("❌ Seeding failed:", error);

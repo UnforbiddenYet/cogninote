@@ -6,20 +6,13 @@ import {
   parseResponse,
 } from "./apiClient";
 
-export async function fetchNotes(
-  query: InferReqQuery<(typeof honoClient.api.notes)["$get"]>,
-) {
-  const response = await parseResponse(
-    honoClient.api.notes.$get({ query }),
-  );
+export async function fetchNotes(query: InferReqQuery<(typeof honoClient.api.notes)["$get"]>) {
+  const response = await parseResponse(honoClient.api.notes.$get({ query }));
   return response.data;
 }
 
 export async function fetchNote(
-  noteId: InferPathParam<
-    (typeof honoClient.api.notes)[":noteId"]["$get"],
-    "noteId"
-  >,
+  noteId: InferPathParam<(typeof honoClient.api.notes)[":noteId"]["$get"], "noteId">,
 ) {
   const response = await parseResponse(
     honoClient.api.notes[":noteId"].$get({
@@ -33,10 +26,7 @@ export async function updateNote({
   noteId,
   updates,
 }: {
-  noteId: InferPathParam<
-    (typeof honoClient.api.notes)[":noteId"]["$patch"],
-    "noteId"
-  >;
+  noteId: InferPathParam<(typeof honoClient.api.notes)[":noteId"]["$patch"], "noteId">;
   updates: InferReqJson<(typeof honoClient.api.notes)[":noteId"]["$patch"]>;
 }) {
   const response = await parseResponse(
@@ -48,9 +38,7 @@ export async function updateNote({
   return response.data.note;
 }
 
-export async function createNote(
-  json: InferReqJson<(typeof honoClient.api.notes)["$post"]>,
-) {
+export async function createNote(json: InferReqJson<(typeof honoClient.api.notes)["$post"]>) {
   const response = await parseResponse(
     honoClient.api.notes.$post({
       json,
@@ -60,10 +48,7 @@ export async function createNote(
 }
 
 export async function deleteNote(
-  noteId: InferPathParam<
-    (typeof honoClient.api.notes)[":noteId"]["$delete"],
-    "noteId"
-  >,
+  noteId: InferPathParam<(typeof honoClient.api.notes)[":noteId"]["$delete"], "noteId">,
 ) {
   await parseResponse(
     honoClient.api.notes[":noteId"].$delete({

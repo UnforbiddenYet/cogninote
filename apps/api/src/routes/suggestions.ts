@@ -31,8 +31,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: { suggestions } });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to get suggestions";
+        const message = error instanceof Error ? error.message : "Failed to get suggestions";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -49,10 +48,7 @@ const app = new Hono()
         data: { generatedCount: count },
       });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to generate suggestions";
+      const message = error instanceof Error ? error.message : "Failed to generate suggestions";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -70,8 +66,7 @@ const app = new Hono()
 
       return c.json({ success: true, data: { connection } });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to accept suggestion";
+      const message = error instanceof Error ? error.message : "Failed to accept suggestion";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -89,8 +84,7 @@ const app = new Hono()
 
       return c.json({ success: true, message: "Suggestion dismissed" });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to dismiss suggestion";
+      const message = error instanceof Error ? error.message : "Failed to dismiss suggestion";
       return c.json({ success: false, error: message }, 500);
     }
   });

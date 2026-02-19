@@ -83,10 +83,7 @@ export async function getConnectionsForNote(userId: string, noteId: string) {
     .where(
       and(
         eq(connections.userId, userId),
-        or(
-          eq(connections.sourceNoteId, noteId),
-          eq(connections.targetNoteId, noteId),
-        ),
+        or(eq(connections.sourceNoteId, noteId), eq(connections.targetNoteId, noteId)),
       ),
     );
 }
@@ -98,10 +95,7 @@ export async function getConnectionCount(userId: string, noteId: string) {
     .where(
       and(
         eq(connections.userId, userId),
-        or(
-          eq(connections.sourceNoteId, noteId),
-          eq(connections.targetNoteId, noteId),
-        ),
+        or(eq(connections.sourceNoteId, noteId), eq(connections.targetNoteId, noteId)),
       ),
     );
 
@@ -111,9 +105,7 @@ export async function getConnectionCount(userId: string, noteId: string) {
 export async function deleteConnection(userId: string, connectionId: string) {
   const result = await db
     .delete(connections)
-    .where(
-      and(eq(connections.id, connectionId), eq(connections.userId, userId)),
-    )
+    .where(and(eq(connections.id, connectionId), eq(connections.userId, userId)))
     .returning();
 
   return result.length > 0;

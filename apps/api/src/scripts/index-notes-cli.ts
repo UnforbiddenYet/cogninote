@@ -6,14 +6,14 @@
  *
  * Usage: bun run apps/api/src/scripts/index-notes-cli.ts
  */
+import { select, checkbox, input, confirm } from "@inquirer/prompts";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { db } from "../db";
 import { notes } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { indexNote } from "../services/lightrag";
-import { select, checkbox, input, confirm } from "@inquirer/prompts";
-import { readFile } from "fs/promises";
-import { join } from "path";
 
 const SEED_USER_FILE = join(import.meta.dir, "./seeds/.seed-user-id");
 
@@ -95,9 +95,7 @@ async function main() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      notesToIndex = allNotes.filter(
-        (n) => new Date(n.createdAt) > sevenDaysAgo,
-      );
+      notesToIndex = allNotes.filter((n) => new Date(n.createdAt) > sevenDaysAgo);
 
       if (notesToIndex.length === 0) {
         console.log("ℹ️  No notes created in the last 7 days");
@@ -161,12 +159,7 @@ async function main() {
       try {
         process.stdout.write(`${progress} ${note.title.substring(0, 50)}... `);
 
-        const result = await indexNote(
-          userId,
-          note.id,
-          note.title,
-          note.content,
-        );
+        const result = await indexNote(userId, note.id, note.title, note.content);
 
         if (result) {
           console.log("✅");
@@ -195,7 +188,7 @@ async function main() {
     }
 
     // Summary
-    console.log("\n" + "─".repeat(50));
+    console.log(`\n${"─".repeat(50)}`);
     console.log("✨ Indexing Complete!");
     console.log("─".repeat(50));
     console.log(`✅ Success: ${success}`);

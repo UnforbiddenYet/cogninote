@@ -16,16 +16,9 @@ export * from "./auth-schema";
 import { user } from "./auth-schema";
 
 // Enums
-export const connectionTypeEnum = pgEnum("connection_type", [
-  "manual",
-  "ai_suggested",
-]);
+export const connectionTypeEnum = pgEnum("connection_type", ["manual", "ai_suggested"]);
 
-export const suggestionTypeEnum = pgEnum("suggestion_type", [
-  "tag",
-  "link",
-  "summary",
-]);
+export const suggestionTypeEnum = pgEnum("suggestion_type", ["tag", "link", "summary"]);
 
 export const suggestionStatusEnum = pgEnum("suggestion_status", [
   "pending",
@@ -69,9 +62,7 @@ export const connections = pgTable(
     targetNoteId: uuid("target_note_id")
       .notNull()
       .references(() => notes.id, { onDelete: "cascade" }),
-    connectionType: connectionTypeEnum("connection_type")
-      .default("manual")
-      .notNull(),
+    connectionType: connectionTypeEnum("connection_type").default("manual").notNull(),
     description: text("description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

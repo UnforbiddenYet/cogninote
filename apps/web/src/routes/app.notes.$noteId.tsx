@@ -6,7 +6,7 @@ export const Route = createFileRoute("/app/notes/$noteId")({
 });
 
 function Note() {
-  const { noteId } = Route.useParams()
+  const { noteId } = Route.useParams();
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -15,5 +15,5 @@ function Note() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -6,5 +6,5 @@ export const Route = createFileRoute("/app/notes/")({
 });
 
 function NotesPage() {
-  return <NotesLibrary />
+  return <NotesLibrary />;
 }

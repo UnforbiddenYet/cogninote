@@ -35,8 +35,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: { entities } });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Entity search failed";
+        const message = error instanceof Error ? error.message : "Entity search failed";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -62,10 +61,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: { entities } });
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to get popular entities";
+        const message = error instanceof Error ? error.message : "Failed to get popular entities";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -86,11 +82,7 @@ const app = new Hono()
     async (c) => {
       try {
         const userId = c.get("userId");
-        const {
-          label,
-          maxDepth: rawMaxDepth,
-          maxNodes: rawMaxNodes,
-        } = c.req.valid("query");
+        const { label, maxDepth: rawMaxDepth, maxNodes: rawMaxNodes } = c.req.valid("query");
         const maxDepth = Math.min(rawMaxDepth, 5);
         const maxNodes = Math.min(rawMaxNodes, 200);
 
@@ -98,8 +90,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: { graph } });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to get subgraph";
+        const message = error instanceof Error ? error.message : "Failed to get subgraph";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -138,8 +129,7 @@ const app = new Hono()
         },
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get graph stats";
+      const message = error instanceof Error ? error.message : "Failed to get graph stats";
       return c.json({ success: false, error: message }, 500);
     }
   });

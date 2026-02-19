@@ -14,8 +14,7 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
   socialProviders: {},
-  secret:
-    process.env.BETTER_AUTH_SECRET || "dev-secret-key-change-in-production",
+  secret: process.env.BETTER_AUTH_SECRET || "dev-secret-key-change-in-production",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
   trustedOrigins: [process.env.ALLOWED_ORIGIN || "http://localhost:3000"],
   advanced: {

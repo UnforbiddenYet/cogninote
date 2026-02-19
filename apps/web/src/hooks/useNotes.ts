@@ -1,11 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import {
-  fetchNotes,
-  fetchNote,
-  updateNote,
-  createNote,
-  deleteNote,
-} from "../lib/api/notes";
+import { fetchNotes, fetchNote, updateNote, createNote, deleteNote } from "../lib/api/notes";
 
 type FetchNoteNoteId = Parameters<typeof fetchNote>[0];
 type FetchNotesQuery = Parameters<typeof fetchNotes>[0];

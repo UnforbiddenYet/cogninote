@@ -14,8 +14,6 @@ export async function executeSearchQuery(
 export async function fetchQueryHistory(
   query: InferReqQuery<(typeof honoClient.api.query.history)["$get"]>,
 ) {
-  const response = await parseResponse(
-    honoClient.api.query.history.$get({ query }),
-  );
+  const response = await parseResponse(honoClient.api.query.history.$get({ query }));
   return response.data;
 }

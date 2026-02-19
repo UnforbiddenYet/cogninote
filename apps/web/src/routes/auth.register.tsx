@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { signUp } from "../lib/auth/authClient";
 
 export const Route = createFileRoute("/auth/register")({
@@ -41,9 +41,7 @@ function RegisterPage() {
       // Auto-login and redirect to app
       navigate({ to: "/app" });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Registration failed"
-      );
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -53,18 +51,15 @@ function RegisterPage() {
     <div className="card space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Create Account</h2>
 
-      {error && (
-        <div className="rounded-lg bg-red-100 p-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-lg bg-red-100 p-3 text-sm text-red-800">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-foreground">
+          <label htmlFor="name" className="block text-sm font-medium text-foreground">
             Name
           </label>
           <input
+            id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -75,10 +70,11 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground">
             Email
           </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -89,10 +85,11 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground">
             Password
           </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -103,10 +100,11 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
             Confirm Password
           </label>
           <input
+            id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -116,11 +114,7 @@ function RegisterPage() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Creating account..." : "Register"}
         </button>
       </form>
@@ -128,6 +122,7 @@ function RegisterPage() {
       <div className="text-center text-sm text-muted">
         Already have an account?{" "}
         <button
+          type="button"
           onClick={() => navigate({ to: "/auth/login" })}
           className="text-primary hover:underline"
         >

@@ -1,27 +1,27 @@
-import { useRef, useEffect } from 'react'
-import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { useRef, useEffect } from "react";
+import { X, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 // import { useRouter } from 'next/navigation'
-import { mockGraphData } from '../lib/mock-data'
+import { mockGraphData } from "../lib/mock-data";
 
 interface Node {
-  id: string
-  x: number
-  y: number
-  vx: number
-  vy: number
-  name: string
-  val: number
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  name: string;
+  val: number;
 }
 
 export function KnowledgeGraph() {
   // const router = useRouter()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const nodesRef = useRef<Node[]>([])
-  const animationRef = useRef<number>()
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const nodesRef = useRef<Node[]>([]);
+  const animationRef = useRef<number>();
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     // Initialize nodes with random positions
     const initialNodes: Node[] = mockGraphData.nodes.map((node) => ({
@@ -30,99 +30,99 @@ export function KnowledgeGraph() {
       y: Math.random() * 400 + 100,
       vx: 0,
       vy: 0,
-    }))
-    nodesRef.current = initialNodes
+    }));
+    nodesRef.current = initialNodes;
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     // Set canvas size
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Apply forces
       const updatedNodes = nodesRef.current.map((node) => {
-        let fx = 0
-        let fy = 0
+        let fx = 0;
+        let fy = 0;
 
         // Center attraction
-        const centerX = canvas.width / 2
-        const centerY = canvas.height / 2
-        fx += (centerX - node.x) * 0.001
-        fy += (centerY - node.y) * 0.001
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        fx += (centerX - node.x) * 0.001;
+        fy += (centerY - node.y) * 0.001;
 
         // Repulsion from other nodes
         nodesRef.current.forEach((other) => {
           if (other.id !== node.id) {
-            const dx = node.x - other.x
-            const dy = node.y - other.y
-            const distance = Math.sqrt(dx * dx + dy * dy) || 1
-            const force = 100 / (distance * distance)
-            fx += (dx / distance) * force
-            fy += (dy / distance) * force
+            const dx = node.x - other.x;
+            const dy = node.y - other.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = 100 / (distance * distance);
+            fx += (dx / distance) * force;
+            fy += (dy / distance) * force;
           }
-        })
+        });
 
         // Update velocity and position
-        const newVx = (node.vx + fx) * 0.9
-        const newVy = (node.vy + fy) * 0.9
+        const newVx = (node.vx + fx) * 0.9;
+        const newVy = (node.vy + fy) * 0.9;
         return {
           ...node,
           vx: newVx,
           vy: newVy,
           x: node.x + newVx,
           y: node.y + newVy,
-        }
-      })
+        };
+      });
 
-      nodesRef.current = updatedNodes
+      nodesRef.current = updatedNodes;
 
       // Draw links
-      ctx.strokeStyle = 'rgba(100, 100, 100, 0.2)'
-      ctx.lineWidth = 1
+      ctx.strokeStyle = "rgba(100, 100, 100, 0.2)";
+      ctx.lineWidth = 1;
       mockGraphData.links.forEach((link) => {
-        const source = updatedNodes.find((n) => n.id === link.source)
-        const target = updatedNodes.find((n) => n.id === link.target)
+        const source = updatedNodes.find((n) => n.id === link.source);
+        const target = updatedNodes.find((n) => n.id === link.target);
         if (source && target) {
-          ctx.beginPath()
-          ctx.moveTo(source.x, source.y)
-          ctx.lineTo(target.x, target.y)
-          ctx.stroke()
+          ctx.beginPath();
+          ctx.moveTo(source.x, source.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.stroke();
         }
-      })
+      });
 
       // Draw nodes
       updatedNodes.forEach((node) => {
         // Node circle
-        ctx.beginPath()
-        ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI)
-        ctx.fillStyle = 'hsl(240, 5%, 15%)'
-        ctx.fill()
-        ctx.strokeStyle = 'hsl(240, 5%, 35%)'
-        ctx.lineWidth = 2
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI);
+        ctx.fillStyle = "hsl(240, 5%, 15%)";
+        ctx.fill();
+        ctx.strokeStyle = "hsl(240, 5%, 35%)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
         // Node label
-        ctx.fillStyle = 'hsl(0, 0%, 98%)'
-        ctx.font = '10px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.fillText(node.name.slice(0, 20), node.x, node.y + node.val + 12)
-      })
+        ctx.fillStyle = "hsl(0, 0%, 98%)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(node.name.slice(0, 20), node.x, node.y + node.val + 12);
+      });
 
-      animationRef.current = requestAnimationFrame(animate)
-    }
+      animationRef.current = requestAnimationFrame(animate);
+    };
 
-    animate()
+    animate();
 
     return () => {
       if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
+        cancelAnimationFrame(animationRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-background/95 backdrop-blur-xl">
@@ -166,10 +166,10 @@ export function KnowledgeGraph() {
           <canvas
             ref={canvasRef}
             className="w-full h-full"
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: "100%", height: "100%" }}
           />
         </div>
       </div>
     </div>
-  )
+  );
 }

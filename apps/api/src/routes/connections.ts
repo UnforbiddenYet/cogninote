@@ -19,8 +19,7 @@ const app = new Hono()
 
       return c.json({ success: true, data: { connections: result } });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to list connections";
+      const message = error instanceof Error ? error.message : "Failed to list connections";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -34,10 +33,7 @@ const app = new Hono()
 
       return c.json({ success: true, data: { connections: result } });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to get connections for note";
+      const message = error instanceof Error ? error.message : "Failed to get connections for note";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -70,10 +66,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: { connection } }, 201);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to create connection";
+        const message = error instanceof Error ? error.message : "Failed to create connection";
         const status = message.includes("not found")
           ? 404
           : message.includes("already exists") || message.includes("itself")
@@ -97,8 +90,7 @@ const app = new Hono()
 
       return c.json({ success: true, message: "Connection deleted" });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to delete connection";
+      const message = error instanceof Error ? error.message : "Failed to delete connection";
       return c.json({ success: false, error: message }, 500);
     }
   });

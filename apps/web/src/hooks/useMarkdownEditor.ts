@@ -1,10 +1,6 @@
-import { useEditor, EditorOptions } from "@tiptap/react";
+import { useEditor, type EditorOptions } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import {
-  Details,
-  DetailsContent,
-  DetailsSummary,
-} from "@tiptap/extension-details";
+import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { Highlight } from "@tiptap/extension-highlight";
 import { Image } from "@tiptap/extension-image";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -13,9 +9,7 @@ import { Markdown } from "@tiptap/markdown";
 import { Placeholder } from "@tiptap/extensions";
 
 export function useMarkdownEditor(
-  options: Partial<
-    Omit<EditorOptions, "extensions" | "editorProps" | "contentType">
-  >,
+  options: Partial<Omit<EditorOptions, "extensions" | "editorProps" | "contentType">>,
 ) {
   const editor = useEditor({
     extensions: [

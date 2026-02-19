@@ -1,12 +1,12 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
-import '../styles/tailwind.css'
+import { createRootRoute, Outlet } from "@tanstack/react-router";
+import "../styles/tailwind.css";
 
 function RootComponent() {
   return (
     <div>
       <Outlet />
     </div>
-  )
+  );
 }
 
 function NotFoundComponent() {
@@ -20,10 +20,10 @@ function NotFoundComponent() {
         </a>
       </div>
     </div>
-  )
+  );
 }
 
 export const Route = createRootRoute({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-})
+});

@@ -49,8 +49,7 @@ const app = new Hono()
           data: { noteId, summary },
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Summary generation failed";
+        const message = error instanceof Error ? error.message : "Summary generation failed";
         return c.json({ success: false, error: message }, 500);
       }
     },

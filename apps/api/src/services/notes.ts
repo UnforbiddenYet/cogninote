@@ -31,13 +31,13 @@ export function extractTitle(content: string): string {
 const plainMarked = new Marked({
   renderer: {
     heading({ tokens }) {
-      return this.parser.parseInline(tokens) + "\n";
+      return `${this.parser.parseInline(tokens)}\n`;
     },
     paragraph({ tokens }) {
-      return this.parser.parseInline(tokens) + "\n";
+      return `${this.parser.parseInline(tokens)}\n`;
     },
     listitem({ tokens }) {
-      return this.parser.parseInline(tokens) + "\n";
+      return `${this.parser.parseInline(tokens)}\n`;
     },
     link: ({ text }) => text,
     image: () => "",
@@ -86,11 +86,9 @@ export async function createNote(
   const previewContent = toPreview(note.content);
 
   if (previewContent.length) {
-    indexNoteInLightRAG(userId, note.id, note.title, note.content).catch(
-      (err) => {
-        console.error(`Failed to index note ${note.id} in LightRAG:`, err);
-      },
-    );
+    indexNoteInLightRAG(userId, note.id, note.title, note.content).catch((err) => {
+      console.error(`Failed to index note ${note.id} in LightRAG:`, err);
+    });
   }
 
   return {
@@ -107,10 +105,7 @@ export async function createNote(
   };
 }
 
-export async function getNoteById(
-  userId: string,
-  noteId: string,
-): Promise<Note | null> {
+export async function getNoteById(userId: string, noteId: string): Promise<Note | null> {
   const result = await db
     .select()
     .from(notes)
@@ -137,10 +132,7 @@ export async function getNoteById(
   };
 }
 
-export async function getNotesByIds(
-  userId: string,
-  noteIds: string[],
-): Promise<Note[]> {
+export async function getNotesByIds(userId: string, noteIds: string[]): Promise<Note[]> {
   if (noteIds.length === 0) {
     return [];
   }
@@ -148,13 +140,7 @@ export async function getNotesByIds(
   const result = await db
     .select()
     .from(notes)
-    .where(
-      and(
-        eq(notes.userId, userId),
-        eq(notes.isArchived, false),
-        inArray(notes.id, noteIds),
-      ),
-    );
+    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), inArray(notes.id, noteIds)));
 
   return result.map((note) => ({
     id: note.id,
@@ -239,13 +225,8 @@ export async function updateNote(
   if (input.content !== undefined) {
     const updatedNote = await getNoteById(userId, noteId);
     if (updatedNote) {
-      reindexNoteInLightRAG(
-        userId,
-        updatedNote.id,
-        updatedNote.title,
-        updatedNote.content,
-      ).catch((err) =>
-        console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
+      reindexNoteInLightRAG(userId, updatedNote.id, updatedNote.title, updatedNote.content).catch(
+        (err) => console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
       );
 
       // TODO: After reindex, validate existing connections for this note.
@@ -262,10 +243,7 @@ export async function updateNote(
   return await getNoteById(userId, noteId);
 }
 
-export async function deleteNote(
-  userId: string,
-  noteId: string,
-): Promise<boolean> {
+export async function deleteNote(userId: string, noteId: string): Promise<boolean> {
   const existing = await getNoteById(userId, noteId);
   if (!existing) {
     return false;
@@ -311,9 +289,7 @@ export async function buildSemanticResults(
 export async function getNoteEntities(
   userId: string,
   noteId: string,
-): Promise<
-  Array<{ label: string; count: number; related?: Array<{ label: string }> }>
-> {
+): Promise<Array<{ label: string; count: number; related?: Array<{ label: string }> }>> {
   const note = await getNoteById(userId, noteId);
   if (!note) return [];
 

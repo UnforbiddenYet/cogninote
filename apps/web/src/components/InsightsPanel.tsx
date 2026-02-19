@@ -1,15 +1,15 @@
-import { Sparkles, AlertCircle } from 'lucide-react'
-import { useIslandStore } from '../stores/island'
-import { useSearchQuery } from '../hooks/useSearch'
-import { NoteCard } from './notes/NoteCard'
-import { MarkdownEditor } from './editor/MarkdownEditor'
-import { SearchHistory } from './search/SearchHistory'
+import { Sparkles, AlertCircle } from "lucide-react";
+import { useIslandStore } from "../stores/island";
+import { useSearchQuery } from "../hooks/useSearch";
+import { NoteCard } from "./notes/NoteCard";
+import { MarkdownEditor } from "./editor/MarkdownEditor";
+import { SearchHistory } from "./search/SearchHistory";
 
 export function InsightsPanel() {
-  const submittedQuery = useIslandStore(state => state.submittedQuery)
+  const submittedQuery = useIslandStore((state) => state.submittedQuery);
   const { data, isLoading, error } = useSearchQuery({ query: submittedQuery });
 
-  if (!submittedQuery) return <SearchHistory />
+  if (!submittedQuery) return <SearchHistory />;
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -19,7 +19,7 @@ export function InsightsPanel() {
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-4 w-4" />
             <span className="text-sm font-medium">
-              {error instanceof Error ? error.message : 'Failed to process query'}
+              {error instanceof Error ? error.message : "Failed to process query"}
             </span>
           </div>
         </div>
@@ -43,9 +43,7 @@ export function InsightsPanel() {
           ) : data?.answer ? (
             <MarkdownEditor content={data.answer} editable={false} />
           ) : !error ? (
-            <p className="text-sm text-muted-foreground">
-              Processing your query...
-            </p>
+            <p className="text-sm text-muted-foreground">Processing your query...</p>
           ) : null}
         </div>
       </div>
@@ -60,13 +58,11 @@ export function InsightsPanel() {
           </div>
           <div className="space-y-2 max-h-100 overflow-y-auto">
             {data.sources.map((source) => (
-              <NoteCard
-                key={source.id}
-                note={source}
-              />
+              <NoteCard key={source.id} note={source} />
             ))}
           </div>
-        </div>) : null}
+        </div>
+      ) : null}
     </div>
-  )
+  );
 }

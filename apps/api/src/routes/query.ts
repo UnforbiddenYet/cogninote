@@ -15,10 +15,7 @@ const app = new Hono()
       "json",
       v.object({
         query: v.pipe(v.string(), v.minLength(1, "Query is required")),
-        maxSources: v.optional(
-          v.pipe(v.number(), v.minValue(1), v.maxValue(50)),
-          10,
-        ),
+        maxSources: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(50)), 10),
       }),
     ),
     async (c) => {
@@ -27,12 +24,7 @@ const app = new Hono()
         const data = c.req.valid("json");
         const mode = "mix";
 
-        const result = await executeQuery(
-          userId,
-          data.query,
-          mode,
-          data.maxSources,
-        );
+        const result = await executeQuery(userId, data.query, mode, data.maxSources);
 
         if (!result) {
           return c.json(
@@ -83,10 +75,7 @@ const app = new Hono()
 
         return c.json({ success: true, data: history });
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to get query history";
+        const message = error instanceof Error ? error.message : "Failed to get query history";
         return c.json({ success: false, error: message }, 500);
       }
     },

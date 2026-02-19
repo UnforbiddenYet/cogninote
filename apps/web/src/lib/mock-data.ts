@@ -11,8 +11,7 @@ export const mockNotes: Note[] = [
   {
     id: "1",
     title: "Getting Started with AI",
-    preview:
-      "Understanding the fundamentals of artificial intelligence and machine learning...",
+    preview: "Understanding the fundamentals of artificial intelligence and machine learning...",
     connections: 0,
     createdAt: "2024-01-15T10:30:00Z",
     updatedAt: "2024-02-01T14:22:00Z",
@@ -20,8 +19,7 @@ export const mockNotes: Note[] = [
   {
     id: "2",
     title: "Knowledge Graphs Explained",
-    preview:
-      "A comprehensive guide to building and maintaining knowledge graphs...",
+    preview: "A comprehensive guide to building and maintaining knowledge graphs...",
     connections: 8,
     createdAt: "2024-01-20T09:15:00Z",
     updatedAt: "2024-01-28T16:45:00Z",
@@ -37,8 +35,7 @@ export const mockNotes: Note[] = [
   {
     id: "4",
     title: "Note-taking Best Practices",
-    preview:
-      "Proven strategies for effective note-taking and information retention...",
+    preview: "Proven strategies for effective note-taking and information retention...",
     connections: 6,
     createdAt: "2024-01-25T13:20:00Z",
     updatedAt: "2024-01-30T09:10:00Z",
@@ -46,8 +43,7 @@ export const mockNotes: Note[] = [
   {
     id: "5",
     title: "Linking Your Thoughts",
-    preview:
-      "The power of bidirectional links in personal knowledge management...",
+    preview: "The power of bidirectional links in personal knowledge management...",
     connections: 10,
     createdAt: "2024-02-01T15:45:00Z",
     updatedAt: "2024-02-03T10:20:00Z",

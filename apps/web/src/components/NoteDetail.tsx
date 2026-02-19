@@ -8,7 +8,15 @@ import { useEditorStore } from "../stores/editor";
 export function NoteDetail({ noteId }: { noteId: string }) {
   const navigate = useNavigate();
   const { data: note, isLoading, isError } = useNote(noteId);
-  const { initialContent, hasUnsavedChanges, lastSaved, isInitialized, initialize, updateContent, reset } = useEditorStore();
+  const {
+    initialContent,
+    hasUnsavedChanges,
+    lastSaved,
+    isInitialized,
+    initialize,
+    updateContent,
+    reset,
+  } = useEditorStore();
   const { scheduleSave, saving } = useAutosave(noteId);
 
   useEffect(() => {

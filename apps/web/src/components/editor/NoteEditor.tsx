@@ -45,7 +45,7 @@ export function NoteEditor({
     if (editor && content && !isInternalUpdate.current) {
       const currentContent = editor.getMarkdown();
       if (currentContent !== content) {
-        editor.commands.setContent(content, { emitUpdate: false, contentType: 'markdown' });
+        editor.commands.setContent(content, { emitUpdate: false, contentType: "markdown" });
       }
     }
     isInternalUpdate.current = false;
@@ -53,20 +53,13 @@ export function NoteEditor({
 
   return (
     <div className="space-y-4">
-      <Toolbar editor={editor} >
+      <Toolbar editor={editor}>
         <div className="flex items-center gap-3 text-sm flex-1 justify-end">
-          {!saving && lastSaved && (
-            <span>
-              {hasUnsavedChanges ? "Unsaved changes" : "Saved"}
-            </span>
-          )}
+          {!saving && lastSaved && <span>{hasUnsavedChanges ? "Unsaved changes" : "Saved"}</span>}
         </div>
       </Toolbar>
       <div className="min-h-screen bg-linear-to-br from-white via-white to-gray-50 relative">
-        <EditorContent
-          editor={editor}
-          className="mx-auto px-2 sm:px-4"
-        />
+        <EditorContent editor={editor} className="mx-auto px-2 sm:px-4" />
       </div>
     </div>
   );

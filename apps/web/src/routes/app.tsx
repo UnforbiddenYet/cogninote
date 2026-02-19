@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { requireAuth } from "../lib/auth/authGuard";
-import { MagicIsland } from "../components/search/MagicIsland"
+import { MagicIsland } from "../components/search/MagicIsland";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: async () => await requireAuth(),
@@ -23,6 +23,5 @@ function AppLayout() {
         <Outlet />
       </div>
     </main>
-  )
-
+  );
 }

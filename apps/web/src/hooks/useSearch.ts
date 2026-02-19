@@ -5,8 +5,7 @@ type ExecuteSearchQueryJson = Parameters<typeof executeSearchQuery>[0];
 
 export const searchKeys = {
   all: ["search"] as const,
-  query: (query: ExecuteSearchQueryJson["query"]) =>
-    [...searchKeys.all, query] as const,
+  query: (query: ExecuteSearchQueryJson["query"]) => [...searchKeys.all, query] as const,
   history: () => [...searchKeys.all, "history"] as const,
 };
 

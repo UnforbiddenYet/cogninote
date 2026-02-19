@@ -24,10 +24,7 @@ const app = new Hono()
         const data = await getDashboardData(userId, timeRange);
         return c.json({ success: true, data });
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to get dashboard data";
+        const message = error instanceof Error ? error.message : "Failed to get dashboard data";
         return c.json({ success: false, error: message }, 500);
       }
     },

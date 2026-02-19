@@ -11,9 +11,9 @@
  * Usage: bun run src/scripts/reindex-notes.ts
  */
 
+import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { notes } from "../db/schema";
-import { eq } from "drizzle-orm";
 import { indexNote } from "../services/lightrag";
 
 async function reindexAllNotes() {
@@ -21,10 +21,7 @@ async function reindexAllNotes() {
 
   try {
     // Fetch all non-archived notes
-    const allNotes = await db
-      .select()
-      .from(notes)
-      .where(eq(notes.isArchived, false));
+    const allNotes = await db.select().from(notes).where(eq(notes.isArchived, false));
 
     if (allNotes.length === 0) {
       console.log("No notes found to index.");
@@ -42,16 +39,9 @@ async function reindexAllNotes() {
       const progress = `[${i + 1}/${allNotes.length}]`;
 
       try {
-        console.log(
-          `${progress} Indexing note: ${note.title.substring(0, 50)}...`,
-        );
+        console.log(`${progress} Indexing note: ${note.title.substring(0, 50)}...`);
 
-        const success = await indexNote(
-          note.userId,
-          note.id,
-          note.title,
-          note.content,
-        );
+        const success = await indexNote(note.userId, note.id, note.title, note.content);
 
         if (success) {
           successCount++;
@@ -73,7 +63,7 @@ async function reindexAllNotes() {
     }
 
     // Summary
-    console.log("\n" + "=".repeat(50));
+    console.log(`\n${"=".repeat(50)}`);
     console.log("📊 Re-indexing In-progress!");
     console.log("=".repeat(50));
     console.log(`✅ Successfully submitted: ${successCount} notes`);
@@ -81,7 +71,7 @@ async function reindexAllNotes() {
 
     if (failedNotes.length > 0) {
       console.log("\n⚠️  Failed note IDs:");
-      failedNotes.forEach((id) => console.log(`  - ${id}`));
+      for (const id of failedNotes) console.log(`  - ${id}`);
     }
 
     console.log("\n");

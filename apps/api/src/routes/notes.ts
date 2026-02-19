@@ -1,13 +1,7 @@
 import { Hono } from "hono";
 import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
-import {
-  createNote,
-  getNoteById,
-  listNotes,
-  updateNote,
-  deleteNote,
-} from "../services/notes";
+import { createNote, getNoteById, listNotes, updateNote, deleteNote } from "../services/notes";
 import { getConnectionsForNote } from "../services/connections";
 import { requireAuth } from "../lib/middleware/auth";
 import { getNoteEntities } from "../services/notes";
@@ -38,8 +32,7 @@ const app = new Hono()
           data: { notes, total, limit, offset },
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to list notes";
+        const message = error instanceof Error ? error.message : "Failed to list notes";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -71,8 +64,7 @@ const app = new Hono()
           201,
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to create note";
+        const message = error instanceof Error ? error.message : "Failed to create note";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -95,8 +87,7 @@ const app = new Hono()
         data: { note },
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get note";
+      const message = error instanceof Error ? error.message : "Failed to get note";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -130,8 +121,7 @@ const app = new Hono()
           data: { note },
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to update note";
+        const message = error instanceof Error ? error.message : "Failed to update note";
         return c.json({ success: false, error: message }, 500);
       }
     },
@@ -154,8 +144,7 @@ const app = new Hono()
         message: "Note deleted",
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to delete note";
+      const message = error instanceof Error ? error.message : "Failed to delete note";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -178,8 +167,7 @@ const app = new Hono()
         data: { connections: noteConnections },
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get related notes";
+      const message = error instanceof Error ? error.message : "Failed to get related notes";
       return c.json({ success: false, error: message }, 500);
     }
   })
@@ -202,8 +190,7 @@ const app = new Hono()
         data: { entities },
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get note entities";
+      const message = error instanceof Error ? error.message : "Failed to get note entities";
       return c.json({ success: false, error: message }, 500);
     }
   });

@@ -6,15 +6,10 @@
  */
 
 // Configuration
-const LIGHTRAG_API_URL =
-  process.env.LIGHTRAG_API_URL || "http://localhost:8020";
-const LIGHTRAG_TIMEOUT_MS = parseInt(
-  process.env.LIGHTRAG_TIMEOUT_MS || "30000",
-);
-const LIGHTRAG_LLM_TIMEOUT_MS = parseInt(
-  process.env.LIGHTRAG_LLM_TIMEOUT_MS || "120000",
-);
-const LIGHTRAG_MAX_RETRIES = parseInt(process.env.LIGHTRAG_MAX_RETRIES || "2");
+const LIGHTRAG_API_URL = process.env.LIGHTRAG_API_URL || "http://localhost:8020";
+const LIGHTRAG_TIMEOUT_MS = parseInt(process.env.LIGHTRAG_TIMEOUT_MS || "30000", 10);
+const LIGHTRAG_LLM_TIMEOUT_MS = parseInt(process.env.LIGHTRAG_LLM_TIMEOUT_MS || "120000", 10);
+const LIGHTRAG_MAX_RETRIES = parseInt(process.env.LIGHTRAG_MAX_RETRIES || "2", 10);
 
 /**
  * Query Modes
@@ -25,24 +20,12 @@ const LIGHTRAG_MAX_RETRIES = parseInt(process.env.LIGHTRAG_MAX_RETRIES || "2");
  * - mix: Integrated knowledge graph + vector retrieval (recommended)
  * - bypass: Direct LLM query without knowledge retrieval
  */
-export type QueryMode =
-  | "local"
-  | "global"
-  | "hybrid"
-  | "naive"
-  | "mix"
-  | "bypass";
+export type QueryMode = "local" | "global" | "hybrid" | "naive" | "mix" | "bypass";
 
 interface SemanticMatch {
   noteId: string;
   snippet?: string;
   score: number;
-}
-
-interface QueryResponseASKQUESTION {
-  answer: string;
-  context: string[];
-  sources: string[];
 }
 
 export interface KnowledgeGraphNode {
@@ -174,7 +157,7 @@ async function retryWithBackoff<T>(
       }
 
       // Exponential backoff: 1s, 2s, 4s
-      const delay = Math.pow(2, i) * 1000;
+      const delay = 2 ** i * 1000;
       console.log(`Retrying in ${delay}ms... (attempt ${i + 1}/${attempts})`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
@@ -254,10 +237,7 @@ export async function indexNote(
 /**
  * Delete a note from LightRAG index
  */
-export async function deleteNote(
-  userId: string,
-  noteId: string,
-): Promise<boolean> {
+export async function deleteNote(userId: string, noteId: string): Promise<boolean> {
   try {
     const fileSource = getNoteFileSource(noteId);
     const docIds = await retryWithBackoff(async () => {
@@ -266,12 +246,7 @@ export async function deleteNote(
 
       return docs
         .filter((doc) => {
-          const filePath =
-            doc.file_path ||
-            doc.filePath ||
-            doc.file_source ||
-            doc.fileSource ||
-            "";
+          const filePath = doc.file_path || doc.filePath || doc.file_source || doc.fileSource || "";
           return filePath === fileSource || filePath.endsWith(`/${fileSource}`);
         })
         .map((doc) => doc.id || doc.doc_id || doc.docId)
@@ -306,7 +281,7 @@ export async function deleteNote(
  * Search notes semantically using LightRAG
  */
 export async function searchSemantic(
-  userId: string,
+  _userId: string,
   query: string,
   mode: QueryMode = "hybrid",
   limit: number = 20,
@@ -341,8 +316,7 @@ export async function searchSemantic(
     const matches = new Map<string, SemanticMatch>();
 
     for (const ref of references) {
-      const filePath =
-        ref.file_path || ref.filePath || ref.file_source || ref.fileSource;
+      const filePath = ref.file_path || ref.filePath || ref.file_source || ref.fileSource;
       const noteId = getNoteIdFromFilePath(filePath);
       if (!noteId) continue;
 
@@ -438,7 +412,7 @@ export async function healthCheck(): Promise<boolean> {
  * Get a subgraph from LightRAG centered on a given entity label
  */
 export async function getSubgraph(
-  userId: string,
+  _userId: string,
   label: string,
   maxDepth: number = 2,
   maxNodes: number = 50,
@@ -458,25 +432,15 @@ export async function getSubgraph(
 
     const nodes: KnowledgeGraphNode[] = (result.nodes || []).map((n: any) => ({
       id: n.id || (Array.isArray(n.labels) ? n.labels[0] : n.label) || n.name,
-      label:
-        (Array.isArray(n.labels) ? n.labels[0] : n.label) || n.name || n.id,
+      label: (Array.isArray(n.labels) ? n.labels[0] : n.label) || n.name || n.id,
       properties: n.properties || n.metadata || {},
     }));
 
-    const edges: KnowledgeGraphEdge[] = (
-      result.edges ||
-      result.links ||
-      []
-    ).map((e: any) => ({
+    const edges: KnowledgeGraphEdge[] = (result.edges || result.links || []).map((e: any) => ({
       id: e.id || `${e.source}-${e.target}`,
       source: e.source || e.from,
       target: e.target || e.to,
-      label:
-        e.properties?.description ||
-        e.properties?.keywords ||
-        e.label ||
-        e.relationship ||
-        "",
+      label: e.properties?.description || e.properties?.keywords || e.label || e.relationship || "",
       properties: e.properties || e.metadata || {},
     }));
 
@@ -490,7 +454,7 @@ export async function getSubgraph(
 /**
  * Get all entity labels from LightRAG
  */
-export async function getEntityLabels(userId: string): Promise<string[]> {
+export async function getEntityLabels(_userId: string): Promise<string[]> {
   try {
     const result = await retryWithBackoff(() =>
       makeRequest<any>("/graph/label/list", "GET", undefined),
@@ -521,9 +485,7 @@ export async function getPopularEntities(
 
     // LightRAG returns plain string[] for popular labels
     const items: string[] = Array.isArray(result)
-      ? result.map((item: any) =>
-          typeof item === "string" ? item : item.label || item.name || "",
-        )
+      ? result.map((item: any) => (typeof item === "string" ? item : item.label || item.name || ""))
       : result.data || result.labels || [];
 
     // Fetch shallow subgraphs in parallel to get edge counts
@@ -548,7 +510,7 @@ export async function getPopularEntities(
  * Search entities in LightRAG
  */
 export async function searchEntities(
-  userId: string,
+  _userId: string,
   query: string,
   limit: number = 10,
 ): Promise<PopularEntity[]> {
@@ -562,9 +524,7 @@ export async function searchEntities(
 
     // LightRAG returns plain string[] for search results
     const items: string[] = Array.isArray(result)
-      ? result.map((item: any) =>
-          typeof item === "string" ? item : item.label || item.name || "",
-        )
+      ? result.map((item: any) => (typeof item === "string" ? item : item.label || item.name || ""))
       : result.data || result.labels || [];
 
     return items.slice(0, limit).map((label) => ({
@@ -580,10 +540,7 @@ export async function searchEntities(
 /**
  * Check if a specific entity exists in LightRAG
  */
-export async function entityExists(
-  userId: string,
-  name: string,
-): Promise<boolean> {
+export async function entityExists(_userId: string, name: string): Promise<boolean> {
   try {
     const params = new URLSearchParams({ name });
     const result = await retryWithBackoff(() =>
@@ -600,7 +557,7 @@ export async function entityExists(
 /**
  * Get LightRAG pipeline status
  */
-export async function getPipelineStatus(userId: string): Promise<any | null> {
+export async function getPipelineStatus(_userId: string): Promise<any | null> {
   try {
     return await retryWithBackoff(() =>
       makeRequest<any>("/documents/pipeline_status", "GET", undefined),
@@ -659,10 +616,7 @@ function getQueryCleanResponse(r: LightRAGQueryResponse) {
   const { response: rawAnswer, references: allRefs } = r;
   const answer = cleanAnswerText(rawAnswer);
   const citedIds = extractCitedReferenceIds(rawAnswer);
-  const citedRefs =
-    citedIds.size > 0
-      ? allRefs.filter((r) => citedIds.has(r.reference_id))
-      : [];
+  const citedRefs = citedIds.size > 0 ? allRefs.filter((r) => citedIds.has(r.reference_id)) : [];
   const sources = citedRefs
     .map((r) => getNoteIdFromFilePath(r.file_path))
     .filter(Boolean) as string[];
@@ -674,7 +628,7 @@ function getQueryCleanResponse(r: LightRAGQueryResponse) {
 }
 
 export async function queryRAG(
-  userId: string,
+  _userId: string,
   query: string,
   mode: QueryMode,
   topK: number = 10,
@@ -689,8 +643,7 @@ export async function queryRAG(
           mode,
           top_k: topK,
           include_references: true,
-          user_prompt:
-            "Do not include source references (【1】【2】etc) in the answer main body",
+          user_prompt: "Do not include source references (【1】【2】etc) in the answer main body",
         },
         LIGHTRAG_LLM_TIMEOUT_MS,
       ),

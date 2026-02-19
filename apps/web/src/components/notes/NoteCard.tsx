@@ -11,13 +11,7 @@ type Note = {
   connectionCount?: number;
 };
 
-export function NoteCard({
-  note,
-  onDelete,
-}: {
-  note: Note;
-  onDelete?: () => void;
-}) {
+export function NoteCard({ note, onDelete }: { note: Note; onDelete?: () => void }) {
   return (
     <Link
       to="/app/notes/$noteId"
@@ -25,12 +19,11 @@ export function NoteCard({
       className="group block p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-border transition-all cursor-pointer"
     >
       <div className="flex items-center justify-between mb-0.5">
-        <div className="text-sm font-medium text-foreground">
-          {note.title}
-        </div>
+        <div className="text-sm font-medium text-foreground">{note.title}</div>
         <div className="flex items-center gap-2">
           {onDelete && (
             <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -53,9 +46,7 @@ export function NoteCard({
           </span>
         </div>
       </div>
-      <div className="text-xs text-muted-foreground line-clamp-1">
-        {note.preview}
-      </div>
+      <div className="text-xs text-muted-foreground line-clamp-1">{note.preview}</div>
     </Link>
   );
 }

@@ -2,10 +2,7 @@ import { eq, and, sql, gte, desc } from "drizzle-orm";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
 import { getPopularEntities } from "./lightrag";
-import {
-  getConnectionSuggestions,
-  generateConnectionSuggestions,
-} from "./suggestions";
+import { getConnectionSuggestions, generateConnectionSuggestions } from "./suggestions";
 import { getConnectionCount } from "./connections";
 import { toPreview } from "./notes";
 
@@ -23,10 +20,7 @@ function getStartDate(range: TimeRange): Date {
   }
 }
 
-export async function getDashboardData(
-  userId: string,
-  timeRange: TimeRange = "7d",
-) {
+export async function getDashboardData(userId: string, timeRange: TimeRange = "7d") {
   const startDate = getStartDate(timeRange);
 
   // Run all DB queries in parallel
@@ -55,23 +49,14 @@ export async function getDashboardData(
       .select({ count: sql<number>`count(*)` })
       .from(notes)
       .where(
-        and(
-          eq(notes.userId, userId),
-          eq(notes.isArchived, false),
-          gte(notes.createdAt, startDate),
-        ),
+        and(eq(notes.userId, userId), eq(notes.isArchived, false), gte(notes.createdAt, startDate)),
       ),
 
     // Connections created in period
     db
       .select({ count: sql<number>`count(*)` })
       .from(connections)
-      .where(
-        and(
-          eq(connections.userId, userId),
-          gte(connections.createdAt, startDate),
-        ),
-      ),
+      .where(and(eq(connections.userId, userId), gte(connections.createdAt, startDate))),
 
     // Recent notes
     db
