@@ -172,6 +172,7 @@ export function Toolbar({
         <div key={gi} className="flex items-center gap-0.5">
           {gi > 0 && <div className="border-r border-border h-5 mx-1" />}
           {group.map((btn, bi) => {
+            if (!state[gi]?.[bi]) return null;
             const { active, disabled } = state[gi][bi];
             const Icon = btn.icon;
             return (

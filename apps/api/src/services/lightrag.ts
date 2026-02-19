@@ -112,7 +112,7 @@ async function makeRequest<T>(
       );
     }
 
-    return await response.json();
+    return (await response.json()) as T;
   } catch (error) {
     clearTimeout(timeoutId);
 

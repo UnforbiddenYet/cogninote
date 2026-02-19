@@ -12,7 +12,7 @@
     "build": "bun run --filter '*' build",
     "lint": "bun run --filter '*' lint",
     "lint:fix": "bun run --filter '*' lint --fix",
-    "type-check": "bun run --filter '*' typecheck",
+    "typecheck": "bun run --filter '*' typecheck",
     "db:push": "bun run --cwd apps/api db:push",
     "db:generate": "bun run --cwd apps/api db:generate",
     "db:studio": "bun run --cwd apps/api db:studio",

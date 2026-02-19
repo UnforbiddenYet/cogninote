@@ -20,7 +20,6 @@ import { auth } from "../lib/auth";
 const SEED_USER_EMAIL = "seed@example.com";
 const SEED_USER_NAME = "Seed User";
 const SEED_PASSWORD = "password123";
-const API_URL = process.env.API_URL || "http://localhost:3001";
 const SEED_FILE = join(import.meta.dir, "./seeds/.seed-user-id");
 
 async function seedUser() {
@@ -45,7 +44,6 @@ async function seedUser() {
     console.log(`   Email:    ${SEED_USER_EMAIL}`);
     console.log(`   Password: ${SEED_PASSWORD}`);
     console.log("─".repeat(40));
-    console.log(`\n💡 Login at: ${API_URL.replace("3001", "3000")}/sign-in`);
   } catch (error) {
     console.error("❌ Failed:", error);
     console.error("\n💡 Make sure the API server is running:");
