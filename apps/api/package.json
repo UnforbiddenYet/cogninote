@@ -7,7 +7,7 @@
     "build": "tsc && bun build src/index.ts --outfile build/index.js",
     "start": "bun src/index.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src tests",
+    "lint": "biome check src",
     "test": "bun test",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",

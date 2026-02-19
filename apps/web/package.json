@@ -7,7 +7,7 @@
     "build": "vite build",
     "start": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check app",
+    "lint": "biome check src",
     "test": "bun test",
     "test:e2e": "playwright test"
   },

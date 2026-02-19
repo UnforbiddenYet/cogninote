@@ -2,16 +2,16 @@
   "name": "mindgraph",
   "version": "0.1.0",
   "devDependencies": {
-    "@biomejs/biome": "2.0.6",
+    "@biomejs/biome": "2.4.3",
     "typescript": "^5.3.0"
   },
   "description": "AI-Powered Personal Knowledge Graph",
   "private": true,
   "scripts": {
-    "dev": "bun run --cwd apps/api dev & bun run --cwd apps/web dev",
-    "build": "bun run --cwd apps/api build && bun run --cwd apps/web build",
-    "lint": "biome check . --apply-unsafe",
-    "format": "biome format . --write",
+    "dev": "bun run --filter '*' dev",
+    "build": "bun run --filter '*' build",
+    "lint": "bun run --filter '*' lint",
+    "lint:fix": "bun run --filter '*' lint --fix",
     "type-check": "bun run --filter '*' typecheck",
     "db:push": "bun run --cwd apps/api db:push",
     "db:generate": "bun run --cwd apps/api db:generate",
