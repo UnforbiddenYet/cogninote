@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "bun src/index.ts",
+    "build": "tsc -b",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src",
     "test": "bun test",

@@ -8,7 +8,8 @@
   "description": "AI-Powered Personal Knowledge Base",
   "scripts": {
     "dev": "bun run --filter '*' dev",
-    "build": "bun run --filter '*' build",
+    "build": "bun run --cwd apps/api build && bun run --cwd apps/web build",
+    "start": "bun run --cwd apps/api start",
     "lint": "bun run --filter '*' lint",
     "lint:fix": "bun run --filter '*' lint --fix",
     "typecheck": "bun run --filter '*' typecheck",
