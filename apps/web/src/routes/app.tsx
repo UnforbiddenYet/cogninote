@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { requireAuth } from "../lib/auth/authGuard";
 import { MagicIsland } from "../components/search/MagicIsland";
+import { AccountMenu } from "../components/AccountMenu";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: async () => await requireAuth(),
@@ -16,6 +17,11 @@ function AppLayout() {
       {/* Persistent Magic Island at Top */}
       <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50">
         <MagicIsland />
+      </div>
+
+      {/* Account Menu */}
+      <div className="fixed top-8 right-8 z-50">
+        <AccountMenu />
       </div>
 
       {/* Content Area */}
