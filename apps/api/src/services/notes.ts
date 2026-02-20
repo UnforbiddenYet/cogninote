@@ -23,6 +23,26 @@ type Note = {
   updatedAt: Date;
 };
 
+const reindexTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function scheduleReindex(userId: string, note: { id: string; content: string }) {
+  const existing = reindexTimers.get(note.id);
+  if (existing) clearTimeout(existing);
+
+  function reindex() {
+    reindexTimers.delete(note.id);
+    reindexNoteInLightRAG(userId, note.id, note.content).catch((err) =>
+      console.error(`Failed to reindex note ${note.id} in LightRAG:`, err),
+    );
+  }
+
+  const timerID = setTimeout(() => {
+    reindex();
+  }, 60_000);
+
+  reindexTimers.set(note.id, timerID);
+}
+
 export function extractTitle(content: string): string {
   const match = content.match(/^#\s+(.+)/);
   return match ? match[1].trim() : "Untitled";
@@ -239,23 +259,8 @@ export async function updateNote(
 
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
-  // Re-index in LightRAG if content changed
   if (input.content !== undefined) {
-    const updatedNote = await getNoteById(userId, noteId);
-    if (updatedNote) {
-      reindexNoteInLightRAG(userId, updatedNote.id, updatedNote.content).catch((err) =>
-        console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
-      );
-
-      // TODO: After reindex, validate existing connections for this note.
-      // Entities may have changed — connections based on old shared entities
-      // could now be stale. Steps:
-      // 1. Get updated entities for this note from LightRAG
-      // 2. For each ai_suggested connection, check if the bridging entities
-      //    (stored in connection description) still exist in both notes
-      // 3. Remove or flag connections whose shared entities no longer overlap
-      // 4. Deduplicate: check if any pending suggestions duplicate rejected ones
-    }
+    scheduleReindex(userId, { id: noteId, content: input.content });
   }
 
   return await getNoteById(userId, noteId);

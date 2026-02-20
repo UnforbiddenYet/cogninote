@@ -256,8 +256,6 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
     const result = await retryWithBackoff(() =>
       makeRequest("/documents/delete_document", "DELETE", {
         doc_ids: docIds,
-        delete_file: true,
-        delete_llm_cache: true,
       }),
     );
 
