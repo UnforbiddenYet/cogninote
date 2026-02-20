@@ -33,14 +33,6 @@ const app = new Hono()
       },
     });
   })
-  // Routes
-  .get("/", (c) => {
-    return c.json({
-      message: "Cogninote API",
-      version: "0.2.0",
-      status: "running",
-    });
-  })
   // API routes
   .use("/api/auth/*", async (c) => {
     return auth.handler(c.req.raw);
