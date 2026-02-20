@@ -1,11 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { useIslandStore } from "../stores/island";
 import { useSearchQuery } from "../hooks/useSearch";
 import { NoteCard } from "./notes/NoteCard";
 import { SearchHistory } from "./search/SearchHistory";
 
-const MarkdownEditor = lazy(() => import('./editor/MarkdownEditor'));
+const MarkdownEditor = lazy(() => import("./editor/MarkdownEditor"));
 
 export function InsightsPanel() {
   const submittedQuery = useIslandStore((state) => state.submittedQuery);

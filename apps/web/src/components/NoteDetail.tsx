@@ -4,18 +4,13 @@ import { useNote } from "../hooks/useNotes";
 import { useAutosave } from "../hooks/useAutosave";
 import { useEditorStore } from "../stores/editor";
 
-const NoteEditor = lazy(() => import('./editor/NoteEditor'));
+const NoteEditor = lazy(() => import("./editor/NoteEditor"));
 
 export function NoteDetail({ noteId }: { noteId: string }) {
   const navigate = useNavigate();
   const { data: note, isLoading, isError } = useNote(noteId);
-  const {
-    initialContent,
-    hasUnsavedChanges,
-    lastSaved,
-    isInitialized,
-    updateContent,
-  } = useEditorStore();
+  const { initialContent, hasUnsavedChanges, lastSaved, isInitialized, updateContent } =
+    useEditorStore();
   const { scheduleSave, saving } = useAutosave(noteId);
 
   // Initialize state from loaded note

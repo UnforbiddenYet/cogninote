@@ -17,8 +17,7 @@ export function useAutosave(noteId: string) {
   const isSaving = useRef(false);
 
   const save = useCallback(async () => {
-    const { hasUnsavedChanges, content, saveSuccess } =
-      useEditorStore.getState();
+    const { hasUnsavedChanges, content, saveSuccess } = useEditorStore.getState();
     if (!hasUnsavedChanges || isSaving.current) return;
 
     isSaving.current = true;
@@ -30,7 +29,7 @@ export function useAutosave(noteId: string) {
     } finally {
       isSaving.current = false;
     }
-  }, [noteId]);
+  }, [noteId, updateNote.mutateAsync]);
 
   const scheduleSave = () => {
     clearTimeout(debounceTimer.current);
@@ -54,7 +53,10 @@ export function useAutosave(noteId: string) {
 
   useEffect(() => {
     periodicTimer.current = setInterval(save, PERIODIC_MS);
-  }, [noteId, save]);
+    return () => {
+      clearInterval(periodicTimer.current);
+    };
+  }, [save]);
 
   return { scheduleSave, saving: updateNote.isPending };
 }

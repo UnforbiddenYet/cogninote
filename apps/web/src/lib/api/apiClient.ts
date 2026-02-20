@@ -5,10 +5,8 @@ export {
   parseResponse,
 } from "@api-server/hc";
 
-export type InferReqJson<T extends (...args: any) => any> =
-  InferRequestType<T>["json"];
-export type InferReqQuery<T extends (...args: any) => any> =
-  InferRequestType<T>["query"];
+export type InferReqJson<T extends (...args: any) => any> = InferRequestType<T>["json"];
+export type InferReqQuery<T extends (...args: any) => any> = InferRequestType<T>["query"];
 export type InferPathParam<
   T extends (...args: any) => any,
   K extends keyof InferRequestType<T>["param"],

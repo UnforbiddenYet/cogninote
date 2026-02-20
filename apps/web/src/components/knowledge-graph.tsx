@@ -1,3 +1,3 @@
 export function KnowledgeGraph() {
-  return null
+  return null;
 }
