@@ -16,10 +16,10 @@ export function NoteDetail({ noteId }: { noteId: string }) {
   // Initialize state from loaded note
   useEffect(() => {
     const { initialize, isInitialized } = useEditorStore.getState();
-    if (note && !isInitialized) {
+    if (note?.content !== undefined && !isInitialized) {
       initialize(note.content);
     }
-  }, [note]);
+  }, [note?.content]);
 
   // Handle navigation on error
   useEffect(() => {

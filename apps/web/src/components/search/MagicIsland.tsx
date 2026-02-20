@@ -9,7 +9,9 @@ export function MagicIsland() {
   const { query, setQuery, submitQuery, reset, isAIExpanded, setIsAIExpanded } = useIslandStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isEditor = !!matchRoute({ to: "/app/new-note" });
+  const isEditor =
+    !!matchRoute({ to: "/app/new-note" }) ||
+    !!matchRoute({ to: "/app/notes/$noteId", fuzzy: true });
   const isGraph = !!matchRoute({ to: "/app/graph" });
   const isNotes = !!matchRoute({ to: "/app/notes" });
   const isSearch = !!matchRoute({ to: "/app/search" });

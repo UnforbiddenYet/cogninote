@@ -1,7 +1,14 @@
 import { Hono } from "hono";
 import * as v from "valibot";
 import { vValidator } from "@hono/valibot-validator";
-import { createNote, getNoteById, listNotes, updateNote, deleteNote } from "../services/notes";
+import {
+  createNote,
+  findOrCreateEmptyNote,
+  getNoteById,
+  listNotes,
+  updateNote,
+  deleteNote,
+} from "../services/notes";
 import { getConnectionsForNote } from "../services/connections";
 import { requireAuth } from "../lib/middleware/auth";
 import { getNoteEntities } from "../services/notes";
@@ -54,7 +61,9 @@ const app = new Hono()
         const userId = c.get("userId");
         const data = c.req.valid("json");
 
-        const note = await createNote(userId, data);
+        const note = data.content
+          ? await createNote(userId, data)
+          : await findOrCreateEmptyNote(userId);
 
         return c.json(
           {

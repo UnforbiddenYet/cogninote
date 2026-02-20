@@ -1,4 +1,4 @@
-import { eq, ne, and, desc, lt, sql, inArray } from "drizzle-orm";
+import { eq, ne, gte, and, desc, lt, sql, inArray } from "drizzle-orm";
 import { Marked } from "marked";
 import { db } from "../db";
 import { notes } from "../db/schema";
@@ -61,6 +61,41 @@ export function toPreview(content: string, maxLength = 150): string {
     .replace(/\s+/g, " ")
     .trim();
   return plain.substring(0, maxLength);
+}
+
+export async function findOrCreateEmptyNote(userId: string): Promise<Note> {
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const existing = await db
+    .select()
+    .from(notes)
+    .where(
+      and(
+        eq(notes.userId, userId),
+        eq(notes.isArchived, false),
+        eq(notes.content, ""),
+        gte(notes.createdAt, fiveMinAgo),
+      ),
+    )
+    .orderBy(desc(notes.createdAt))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const note = existing[0];
+    return {
+      id: note.id,
+      userId: note.userId,
+      title: note.title,
+      content: note.content,
+      preview: "",
+      color: note.color || undefined,
+      isArchived: note.isArchived,
+      summary: note.summary || undefined,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+    };
+  }
+
+  return createNote(userId, { content: "" });
 }
 
 export async function createNote(
