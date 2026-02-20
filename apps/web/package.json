@@ -1,5 +1,5 @@
 {
-  "name": "@mindgraph/web",
+  "name": "@cogninote/web",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

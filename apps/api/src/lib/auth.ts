@@ -18,7 +18,7 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_BASE_URL || "http://localhost:3001",
   trustedOrigins: [process.env.BETTER_AUTH_TRUSTED_ORIGIN || "http://localhost:3000"],
   advanced: {
-    cookiePrefix: "mindgraph",
+    cookiePrefix: "cogninote",
     useSecureCookies: process.env.NODE_ENV === "production",
   },
 });

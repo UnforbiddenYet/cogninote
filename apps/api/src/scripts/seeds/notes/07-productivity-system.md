@@ -11,7 +11,7 @@ A simple system that actually works for me.
 
 ## Tools I Use
 
-- **Notes:** Personal knowledge graph
+- **Notes:** Personal knowledge base
 - **Tasks:** Simple todo list
 - **Calendar:** Time blocking
 - **Focus:** Pomodoro timer

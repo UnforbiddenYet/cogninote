@@ -1,12 +1,11 @@
 {
-  "name": "mindgraph",
+  "name": "cogninote",
   "version": "0.1.0",
   "devDependencies": {
     "@biomejs/biome": "2.4.3",
     "typescript": "^5.3.0"
   },
-  "description": "AI-Powered Personal Knowledge Graph",
-  "private": true,
+  "description": "AI-Powered Personal Knowledge Base",
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "build": "bun run --filter '*' build",
@@ -20,7 +19,6 @@
   },
   "type": "module",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ]
 }

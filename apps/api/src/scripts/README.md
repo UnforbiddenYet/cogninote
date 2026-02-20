@@ -42,4 +42,4 @@ API_URL=http://localhost:3001
 
 **Notes not appearing in search**
 - Run `index-notes-cli.ts` to manually index notes
-- Check LightRAG logs: `docker logs mindgraph_lightrag`
+- Check LightRAG logs: `docker logs cogninote_lightrag`

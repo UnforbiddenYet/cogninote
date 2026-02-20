@@ -4,7 +4,7 @@ Ideas I want to build someday.
 
 ## In Progress
 
-- **Personal Knowledge Graph** - Connect notes semantically, use AI for discovery
+- **Personal Knowledge Base** - Connect notes semantically, use AI for discovery
 
 ## Next Up
 

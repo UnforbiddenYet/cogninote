@@ -1,26 +1,26 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: mindgraph_postgres
+    container_name: cogninote_postgres
     environment:
-      POSTGRES_USER: mindgraph_user
-      POSTGRES_PASSWORD: mindgraph_password
-      POSTGRES_DB: mindgraph_dev
+      POSTGRES_USER: cogninote_user
+      POSTGRES_PASSWORD: cogninote_password
+      POSTGRES_DB: cogninote_dev
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mindgraph_user"]
+      test: ["CMD-SHELL", "pg_isready -U cogninote_user"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - mindgraph_network
+      - cogninote_network
 
   lightrag:
     image: ghcr.io/hkuds/lightrag:v1.4.9.11
-    container_name: mindgraph_lightrag
+    container_name: cogninote_lightrag
     ports:
       - "8020:8020"
     env_file: ".env.lightrag"
@@ -28,7 +28,7 @@ services:
       - lightrag_rag_storage:/app/rag_storage
       - lightrag_inputs:/app/inputs
     networks:
-      - mindgraph_network
+      - cogninote_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8020/health')\""]
@@ -43,5 +43,5 @@ volumes:
   lightrag_inputs:
 
 networks:
-  mindgraph_network:
+  cogninote_network:
     driver: bridge

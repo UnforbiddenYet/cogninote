@@ -36,7 +36,7 @@ const app = new Hono()
   // Routes
   .get("/", (c) => {
     return c.json({
-      message: "MindGraph API",
+      message: "Cogninote API",
       version: "0.2.0",
       status: "running",
     });

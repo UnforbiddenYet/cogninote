@@ -2,9 +2,9 @@ AI-first Personal Knowledge Base
 
 ## Architecture
 - **Stack**: Full-stack Hono + React app with LightRAG knowledge base retrieval
-- **Backend Stack**: Hono + Drizzle ORM + PostgreSQL + Zod + Bun runtime + Docker
+- **Backend Stack**: Hono + Drizzle ORM + PostgreSQL + valibot + Bun runtime + Docker
 - **Pattern**: `routes/` (HTTP + validation) → `services/` (business logic) → `db/` (schema + connection)
-- **Auth**: `requireAuth()` middleware → `c.get("userId")`. Handlers typed `c: any`.
+- **Auth**: `requireAuth()` middleware → `c.get("userId")`.
 - **LightRAG**: Fire-and-forget document indexing.
 - **Typecheck**: `bun run typecheck` from `apps/api/`
 - **DB push**: `bun run db:push` from `apps/api/` (no migration files)
