@@ -1,9 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { NoteEditor } from "./editor/NoteEditor";
+import { lazy, Suspense, useEffect } from "react";
 import { useNote } from "../hooks/useNotes";
 import { useAutosave } from "../hooks/useAutosave";
 import { useEditorStore } from "../stores/editor";
+
+const NoteEditor = lazy(() => import('./editor/NoteEditor'));
 
 export function NoteDetail({ noteId }: { noteId: string }) {
   const navigate = useNavigate();
@@ -59,12 +60,14 @@ export function NoteDetail({ noteId }: { noteId: string }) {
   }
 
   return (
-    <NoteEditor
-      content={initialContent}
-      onContentChange={handleContentChange}
-      saving={saving}
-      lastSaved={lastSaved}
-      hasUnsavedChanges={hasUnsavedChanges}
-    />
+    <Suspense fallback={null}>
+      <NoteEditor
+        content={initialContent}
+        onContentChange={handleContentChange}
+        saving={saving}
+        lastSaved={lastSaved}
+        hasUnsavedChanges={hasUnsavedChanges}
+      />
+    </Suspense>
   );
 }

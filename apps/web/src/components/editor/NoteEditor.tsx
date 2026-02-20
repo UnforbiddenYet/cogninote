@@ -64,3 +64,5 @@ export function NoteEditor({
     </div>
   );
 }
+
+export default NoteEditor;

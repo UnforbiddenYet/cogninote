@@ -1,9 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { Sparkles, AlertCircle } from "lucide-react";
 import { useIslandStore } from "../stores/island";
 import { useSearchQuery } from "../hooks/useSearch";
 import { NoteCard } from "./notes/NoteCard";
-import { MarkdownEditor } from "./editor/MarkdownEditor";
 import { SearchHistory } from "./search/SearchHistory";
+
+const MarkdownEditor = lazy(() => import('./editor/MarkdownEditor'));
 
 export function InsightsPanel() {
   const submittedQuery = useIslandStore((state) => state.submittedQuery);
@@ -41,7 +43,9 @@ export function InsightsPanel() {
               <div className="h-4 bg-muted/50 rounded animate-pulse w-4/6" />
             </div>
           ) : data?.answer ? (
-            <MarkdownEditor content={data.answer} editable={false} />
+            <Suspense fallback={null}>
+              <MarkdownEditor content={data.answer} editable={false} />
+            </Suspense>
           ) : !error ? (
             <p className="text-sm text-muted-foreground">Processing your query...</p>
           ) : null}

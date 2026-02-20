@@ -8,3 +8,5 @@ export function MarkdownEditor({ content, editable }: { content: string; editabl
   });
   return <EditorContent editor={editor} />;
 }
+
+export default MarkdownEditor;
