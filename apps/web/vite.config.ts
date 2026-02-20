@@ -24,7 +24,4 @@ export default defineConfig({
     port: 3000,
     cors: true,
   },
-  define: {
-    __API_URL__: JSON.stringify(process.env.API_URL || "http://localhost:3001"),
-  },
 });
