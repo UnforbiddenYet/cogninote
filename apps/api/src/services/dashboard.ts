@@ -1,4 +1,4 @@
-import { eq, and, sql, gte, desc } from "drizzle-orm";
+import { eq, ne, and, sql, gte, desc } from "drizzle-orm";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
 import { getPopularEntities } from "./lightrag";
@@ -36,7 +36,7 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
     db
       .select({ count: sql<number>`count(*)` })
       .from(notes)
-      .where(and(eq(notes.userId, userId), eq(notes.isArchived, false))),
+      .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, ""))),
 
     // Total connections
     db
@@ -49,7 +49,12 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
       .select({ count: sql<number>`count(*)` })
       .from(notes)
       .where(
-        and(eq(notes.userId, userId), eq(notes.isArchived, false), gte(notes.createdAt, startDate)),
+        and(
+          eq(notes.userId, userId),
+          eq(notes.isArchived, false),
+          ne(notes.content, ""),
+          gte(notes.createdAt, startDate),
+        ),
       ),
 
     // Connections created in period
@@ -67,7 +72,7 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
         updatedAt: notes.updatedAt,
       })
       .from(notes)
-      .where(and(eq(notes.userId, userId), eq(notes.isArchived, false)))
+      .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, "")))
       .orderBy(desc(notes.updatedAt))
       .limit(5),
 

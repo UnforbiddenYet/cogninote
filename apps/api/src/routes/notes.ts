@@ -45,7 +45,7 @@ const app = new Hono()
     vValidator(
       "json",
       v.object({
-        content: v.pipe(v.string(), v.minLength(1, "Content required")),
+        content: v.pipe(v.string(), v.minLength(0, "Content required")),
         color: v.optional(v.string()),
       }),
     ),
@@ -99,7 +99,7 @@ const app = new Hono()
     vValidator(
       "json",
       v.object({
-        content: v.optional(v.pipe(v.string(), v.minLength(1))),
+        content: v.optional(v.string()),
         color: v.optional(v.string()),
         isArchived: v.optional(v.boolean()),
       }),

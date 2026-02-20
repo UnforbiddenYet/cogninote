@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, ne, and, desc, lt, sql, inArray } from "drizzle-orm";
 import { Marked } from "marked";
 import { db } from "../db";
 import { notes } from "../db/schema";
@@ -156,6 +156,18 @@ export async function getNotesByIds(userId: string, noteIds: string[]): Promise<
   }));
 }
 
+export async function purgeStaleEmptyNotes() {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const result = await db
+    .delete(notes)
+    .where(and(eq(notes.content, ""), lt(notes.createdAt, cutoff)))
+    .returning({ id: notes.id });
+
+  if (result.length > 0) {
+    console.log(`Purged ${result.length} stale empty notes`);
+  }
+}
+
 export async function listNotes(
   userId: string,
   limit = 20,
@@ -164,14 +176,14 @@ export async function listNotes(
   const countResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(notes)
-    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false)));
+    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, "")));
 
   const total = countResult[0]?.count || 0;
 
   const result = await db
     .select()
     .from(notes)
-    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false)))
+    .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, "")))
     .orderBy(desc(notes.updatedAt))
     .limit(limit)
     .offset(offset);
