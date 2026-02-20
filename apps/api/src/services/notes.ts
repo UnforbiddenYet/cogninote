@@ -1,5 +1,5 @@
 import { eq, ne, gte, and, desc, lt, sql, inArray } from "drizzle-orm";
-import { Marked } from "marked";
+import removeMd from "remove-markdown";
 import { db } from "../db";
 import { notes } from "../db/schema";
 import {
@@ -28,38 +28,9 @@ export function extractTitle(content: string): string {
   return match ? match[1].trim() : "Untitled";
 }
 
-const plainMarked = new Marked({
-  renderer: {
-    heading({ tokens }) {
-      return `${this.parser.parseInline(tokens)}\n`;
-    },
-    paragraph({ tokens }) {
-      return `${this.parser.parseInline(tokens)}\n`;
-    },
-    listitem({ tokens }) {
-      return `${this.parser.parseInline(tokens)}\n`;
-    },
-    link: ({ text }) => text,
-    image: () => "",
-    code: () => "",
-    codespan: ({ text }) => text,
-    blockquote: ({ text }) => text,
-    hr: () => "\n",
-    br: () => "\n",
-    html: () => "",
-    strong: ({ text }) => text,
-    em: ({ text }) => text,
-    del: ({ text }) => text,
-  },
-});
-
 export function toPreview(content: string, maxLength = 150): string {
   const withoutTitle = content.replace(/^#\s+.+\n?/, "");
-  const plain = (plainMarked.parse(withoutTitle) as string)
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const plain = removeMd(withoutTitle).replace(/\s+/g, " ").trim();
   return plain.substring(0, maxLength);
 }
 
