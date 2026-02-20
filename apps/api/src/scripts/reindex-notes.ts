@@ -41,7 +41,7 @@ async function reindexAllNotes() {
       try {
         console.log(`${progress} Indexing note: ${note.title.substring(0, 50)}...`);
 
-        const success = await indexNote(note.userId, note.id, note.title, note.content);
+        const success = await indexNote(note.userId, note.id, note.content);
 
         if (success) {
           successCount++;

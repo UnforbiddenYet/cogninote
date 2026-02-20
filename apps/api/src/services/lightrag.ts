@@ -192,6 +192,9 @@ function getNoteIdFromFilePath(filePath?: string | null): string | null {
 function normalizeDocuments(result: any): any[] {
   if (!result) return [];
   if (Array.isArray(result)) return result;
+  if (result.statuses && typeof result.statuses === "object") {
+    return Object.values(result.statuses).flat();
+  }
   if (Array.isArray(result.documents)) return result.documents;
   if (Array.isArray(result.data)) return result.data;
   if (Array.isArray(result.items)) return result.items;
@@ -202,21 +205,13 @@ function normalizeDocuments(result: any): any[] {
 /**
  * Index a note in LightRAG
  */
-export async function indexNote(
-  userId: string,
-  noteId: string,
-  title: string,
-  content: string,
-): Promise<boolean> {
+export async function indexNote(userId: string, noteId: string, content: string): Promise<boolean> {
   const fileSource = getNoteFileSource(noteId);
-
-  // Combine title and content for better context
-  const documentContent = `# ${title}\n\n${content}`;
 
   try {
     const result = await retryWithBackoff(() =>
       makeRequest("/documents/text", "POST", {
-        text: documentContent,
+        text: content,
         file_source: fileSource,
       }),
     );
@@ -259,13 +254,15 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
     }
 
     const result = await retryWithBackoff(() =>
-      makeRequest("/documents/delete", "POST", {
+      makeRequest("/documents/delete_document", "DELETE", {
         doc_ids: docIds,
+        delete_file: true,
+        delete_llm_cache: true,
       }),
     );
 
     if (result) {
-      console.log(`Successfully deleted note ${noteId} for user ${userId}`);
+      console.log(`Successfully deleted note ${noteId} for user ${userId}`, result);
       return true;
     }
 
@@ -378,11 +375,10 @@ export async function generateSummary(content: string): Promise<string | null> {
 export async function reindexNote(
   userId: string,
   noteId: string,
-  title: string,
   content: string,
 ): Promise<boolean> {
   await deleteNote(userId, noteId);
-  return indexNote(userId, noteId, title, content);
+  return indexNote(userId, noteId, content);
 }
 
 /**

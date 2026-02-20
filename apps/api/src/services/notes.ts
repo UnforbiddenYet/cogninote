@@ -86,7 +86,7 @@ export async function createNote(
   const previewContent = toPreview(note.content);
 
   if (previewContent.length) {
-    indexNoteInLightRAG(userId, note.id, note.title, note.content).catch((err) => {
+    indexNoteInLightRAG(userId, note.id, note.content).catch((err) => {
       console.error(`Failed to index note ${note.id} in LightRAG:`, err);
     });
   }
@@ -96,7 +96,7 @@ export async function createNote(
     userId: note.userId,
     title: note.title,
     content: note.content,
-    preview: toPreview(note.content),
+    preview: previewContent,
     color: note.color || undefined,
     isArchived: note.isArchived,
     summary: note.summary || undefined,
@@ -237,8 +237,8 @@ export async function updateNote(
   if (input.content !== undefined) {
     const updatedNote = await getNoteById(userId, noteId);
     if (updatedNote) {
-      reindexNoteInLightRAG(userId, updatedNote.id, updatedNote.title, updatedNote.content).catch(
-        (err) => console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
+      reindexNoteInLightRAG(userId, updatedNote.id, updatedNote.content).catch((err) =>
+        console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
       );
 
       // TODO: After reindex, validate existing connections for this note.

@@ -159,7 +159,7 @@ async function main() {
       try {
         process.stdout.write(`${progress} ${note.title.substring(0, 50)}... `);
 
-        const result = await indexNote(userId, note.id, note.title, note.content);
+        const result = await indexNote(userId, note.id, note.content);
 
         if (result) {
           console.log("✅");
