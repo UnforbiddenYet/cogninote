@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useBlocker } from "@tanstack/react-router";
 import { useEditorStore } from "../stores/editor";
 import { useUpdateNote } from "./useNotes";
-import { deleteNote } from "../lib/api/notes";
 
 const DEBOUNCE_MS = 2000;
 const PERIODIC_MS = 30000;
 
 /**
  * Autosave hook that debounces on change and periodically flushes.
- * Reads from the zustand store directly. Also, flushes unsaved changes on unmount.
+ * Uses useBlocker for navigation-away cleanup.
  */
 export function useAutosave(noteId: string) {
   const updateNote = useUpdateNote();
@@ -17,8 +17,9 @@ export function useAutosave(noteId: string) {
   const isSaving = useRef(false);
 
   const save = useCallback(async () => {
-    const { hasUnsavedChanges, content, saveSuccess } = useEditorStore.getState();
-    if (!hasUnsavedChanges || !content.trim() || isSaving.current) return;
+    const { hasUnsavedChanges, content, saveSuccess } =
+      useEditorStore.getState();
+    if (!hasUnsavedChanges || isSaving.current) return;
 
     isSaving.current = true;
     try {
@@ -29,25 +30,30 @@ export function useAutosave(noteId: string) {
     } finally {
       isSaving.current = false;
     }
-  }, [noteId, updateNote]);
+  }, [noteId]);
 
   const scheduleSave = () => {
     clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(save, DEBOUNCE_MS);
   };
 
-  useEffect(() => {
-    periodicTimer.current = setInterval(save, PERIODIC_MS);
-    return () => {
+  // In-app navigation: save unsaved + reset store
+  useBlocker({
+    shouldBlockFn: async () => {
       clearInterval(periodicTimer.current);
       clearTimeout(debounceTimer.current);
-      const { content } = useEditorStore.getState();
-      if (!content.trim()) {
-        deleteNote(noteId).catch(() => {});
-      } else {
-        save();
+      const { hasUnsavedChanges, reset } = useEditorStore.getState();
+      if (hasUnsavedChanges) {
+        await save();
       }
-    };
+      reset();
+      return false;
+    },
+    enableBeforeUnload: false,
+  });
+
+  useEffect(() => {
+    periodicTimer.current = setInterval(save, PERIODIC_MS);
   }, [noteId, save]);
 
   return { scheduleSave, saving: updateNote.isPending };

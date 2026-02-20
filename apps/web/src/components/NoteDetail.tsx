@@ -14,22 +14,17 @@ export function NoteDetail({ noteId }: { noteId: string }) {
     hasUnsavedChanges,
     lastSaved,
     isInitialized,
-    initialize,
     updateContent,
-    reset,
   } = useEditorStore();
   const { scheduleSave, saving } = useAutosave(noteId);
 
-  useEffect(() => {
-    return () => reset();
-  }, [reset]);
-
   // Initialize state from loaded note
   useEffect(() => {
+    const { initialize, isInitialized } = useEditorStore.getState();
     if (note && !isInitialized) {
       initialize(note.content);
     }
-  }, [note, isInitialized, initialize]);
+  }, [note]);
 
   // Handle navigation on error
   useEffect(() => {
