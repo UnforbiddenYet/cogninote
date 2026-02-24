@@ -11,13 +11,15 @@
     "test": "bun test",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "generate:lightrag-types": "openapi-typescript http://localhost:8020/openapi.json -o ./src/services/lightrag-types.d.ts"
   },
   "dependencies": {
     "@hono/valibot-validator": "^0.6.1",
     "better-auth": "^1.4.18",
     "drizzle-orm": "^0.33.0",
     "hono": "^4.1.0",
+    "openapi-fetch": "^0.17.0",
     "postgres": "3.4.8",
     "remove-markdown": "^0.6.3",
     "valibot": "^1.2.0"
@@ -29,6 +31,7 @@
     "@types/node": "^20.10.0",
     "@types/remove-markdown": "^0.3.4",
     "drizzle-kit": "^0.24.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.3.0"
   }
 }

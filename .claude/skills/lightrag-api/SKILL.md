@@ -8,6 +8,18 @@ description: Use when interacting with the LightRAG Server API to upload documen
 ## Overview
 Use this skill when you need to call the LightRAG Server API for ingestion, querying (including NDJSON streaming), graph operations, and pipeline/health management. Keep this file lean and reference the full OpenAPI spec in `references/openapi.json` for exact schemas.
 
+## Typed Client
+All LightRAG interactions go through the `openapi-fetch` client in `apps/api/src/services/lightrag.ts`:
+```ts
+import createClient from "openapi-fetch";
+import type { paths, components } from "./lightrag-types";
+const client = createClient<paths>({ baseUrl: LIGHTRAG_API_URL });
+```
+- Types are generated from the live server: `bun run generate:lightrag-types` (fetches `http://localhost:8020/openapi.json`).
+- Generated types live in `apps/api/src/services/lightrag-types.d.ts` — do not hand-edit.
+- 6 endpoints have full OpenAPI schemas and real type-safety (documents, query, pipeline_status).
+- 7 graph endpoints return `unknown` — use TypeScript type assertions (e.g., `data as string[]`, `data as GraphsResponse`).
+
 ## Setup
 - Base URL: use `LIGHTRAG_API_URL` (default `http://localhost:8020`).
 - Timeouts: honor caller-configured timeouts; LightRAG can take longer for LLM-backed operations.
@@ -89,4 +101,6 @@ Query Modes:
   - `POST /api/generate`
 
 ## Reference
-For full schema details, open `references/openapi.json` and search for the endpoint or schema name (e.g., `QueryRequest`, `InsertResponse`, `DocumentsRequest`).
+- For full schema details, open `references/openapi.json` and search for the endpoint or schema name (e.g., `QueryRequest`, `InsertResponse`, `DocumentsRequest`).
+- For TypeScript types, check `apps/api/src/services/lightrag-types.d.ts` (generated) and manual type annotations in `lightrag.ts` (`GraphsResponse`, `EntityExistsResponse`).
+- To regenerate types after LightRAG API changes: `cd apps/api && bun run generate:lightrag-types`.
