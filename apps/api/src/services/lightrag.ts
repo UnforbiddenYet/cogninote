@@ -8,6 +8,8 @@
 import createClient from "openapi-fetch";
 import type { paths, components } from "./lightrag-types";
 import { withCache, FIVE_MINUTES } from "../cache";
+import { MINUTE_MS, SECOND_MS } from "../lib/time";
+import { pollUntil } from "../lib/pollUntil";
 
 // Configuration
 const LIGHTRAG_API_URL = process.env.LIGHTRAG_API_URL || "http://localhost:8020";
@@ -201,7 +203,7 @@ export async function indexNote(noteId: string, content: string): Promise<boolea
   }
 }
 
-export async function deleteNote(noteId: string): Promise<boolean> {
+export async function deleteNote(noteId: string): Promise<string[] | false> {
   try {
     const fileSource = getNoteFileSource(noteId);
 
@@ -228,7 +230,7 @@ export async function deleteNote(noteId: string): Promise<boolean> {
 
     if (data) {
       console.log(`Successfully deleted note ${noteId}`, data);
-      return true;
+      return docIds;
     }
 
     console.error(`Failed to delete note ${noteId}`);
@@ -311,8 +313,23 @@ export async function generateSummary(content: string): Promise<string | null> {
   }
 }
 
+async function waitForDocumentsGone(docIds: string[]): Promise<void> {
+  const docIdSet = new Set(docIds);
+  const isGone = async () => {
+    const { data } = await client.GET("/documents");
+    const existing = data?.statuses ? Object.values(data.statuses).flat() : [];
+    return !existing.some((doc) => docIdSet.has(doc.id));
+  };
+
+  const gone = await pollUntil(isGone);
+  if (!gone) console.warn(`Timeout waiting for LightRAG to remove documents before reindex`);
+}
+
 export async function reindexNote(noteId: string, content: string): Promise<boolean> {
-  await deleteNote(noteId);
+  const deletedDocIds = await deleteNote(noteId);
+  if (deletedDocIds) {
+    await waitForDocumentsGone(deletedDocIds);
+  }
   return indexNote(noteId, content);
 }
 

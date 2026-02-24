@@ -26,7 +26,7 @@ type Note = {
   updatedAt: Date;
 };
 
-const scheduleReindex = createDebouncer(MINUTE_MS);
+const debounceReindex = createDebouncer(MINUTE_MS);
 
 export function extractTitle(content: string): string {
   const match = content.match(/^#\s+(.+)/);
@@ -238,7 +238,6 @@ export async function updateNote(
     updateData.content = input.content;
     updateData.title = extractTitle(input.content);
   }
-  console.log("updateData.title", updateData.title);
   if (input.color !== undefined) updateData.color = input.color;
   if (input.isArchived !== undefined) updateData.isArchived = input.isArchived;
   if (input.summary) updateData.summary = input.summary;
@@ -246,7 +245,7 @@ export async function updateNote(
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
   if (input.content !== undefined) {
-    scheduleReindex(noteId, () =>
+    debounceReindex(noteId, () =>
       reindexNoteInLightRAG(noteId, input.content!).catch((err) =>
         console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
       ),
