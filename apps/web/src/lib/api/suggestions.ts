@@ -12,7 +12,5 @@ export async function acceptSuggestion(
 export async function dismissSuggestion(
   id: InferPathParam<(typeof honoClient.api.suggestions)[":id"]["dismiss"]["$post"], "id">,
 ) {
-  await parseResponse(
-    honoClient.api.suggestions[":id"].dismiss.$post({ param: { id } }),
-  );
+  await parseResponse(honoClient.api.suggestions[":id"].dismiss.$post({ param: { id } }));
 }

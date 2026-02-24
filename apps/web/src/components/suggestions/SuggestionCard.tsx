@@ -32,7 +32,11 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
             onClick={() => accept.mutate(suggestion.id)}
             className="p-1 rounded hover:bg-green-500/20 text-muted-foreground hover:text-green-500 transition-colors disabled:opacity-40"
           >
-            {isAccepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            {isAccepting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
           </button>
           <button
             type="button"
@@ -41,7 +45,11 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
             onClick={() => dismiss.mutate(suggestion.id)}
             className="p-1 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-40"
           >
-            {isDismissing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
+            {isDismissing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <X className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
       </div>
