@@ -30,7 +30,7 @@ const scheduleReindex = createDebouncer(MINUTE_MS);
 
 export function extractTitle(content: string): string {
   const match = content.match(/^#\s+(.+)/);
-  return match ? match[1].trim() : "Untitled";
+  return match ? removeMd(match[1].trim()) : "Untitled";
 }
 
 export function toPreview(content: string, maxLength = 150): string {
@@ -238,6 +238,7 @@ export async function updateNote(
     updateData.content = input.content;
     updateData.title = extractTitle(input.content);
   }
+  console.log("updateData.title", updateData.title);
   if (input.color !== undefined) updateData.color = input.color;
   if (input.isArchived !== undefined) updateData.isArchived = input.isArchived;
   if (input.summary) updateData.summary = input.summary;
