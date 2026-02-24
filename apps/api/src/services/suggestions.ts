@@ -1,4 +1,4 @@
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, or, sql, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { aiSuggestions, notes } from "../db/schema";
 import { getEntityLabels, getSubgraph } from "./lightrag";
@@ -133,18 +133,24 @@ export async function generateConnectionSuggestions(
     const exists = await connectionExists(userId, sourceNote.id, targetNote.id);
     if (exists) continue;
 
-    // Skip if this pair was already suggested (pending or rejected)
-    // TODO: Currently only checks for exact noteId match. Should check
-    // both directions (source/target) in suggestionData JSON to fully
-    // deduplicate against previously rejected pairs.
+    // Skip if this pair was already suggested (pending or rejected) in either direction
     const existingSuggestion = await db
       .select({ id: aiSuggestions.id })
       .from(aiSuggestions)
       .where(
         and(
           eq(aiSuggestions.userId, userId),
-          eq(aiSuggestions.noteId, sourceNote.id),
           eq(aiSuggestions.suggestionType, "link"),
+          or(
+            and(
+              sql`${aiSuggestions.suggestionData}->>'sourceNoteId' = ${sourceNote.id}`,
+              sql`${aiSuggestions.suggestionData}->>'targetNoteId' = ${targetNote.id}`,
+            ),
+            and(
+              sql`${aiSuggestions.suggestionData}->>'sourceNoteId' = ${targetNote.id}`,
+              sql`${aiSuggestions.suggestionData}->>'targetNoteId' = ${sourceNote.id}`,
+            ),
+          ),
         ),
       )
       .limit(1);
