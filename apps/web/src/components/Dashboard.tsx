@@ -31,7 +31,7 @@ export function Dashboard() {
     );
   }
 
-  const { stats, recentNotes, topEntities, suggestedConnections, mostConnectedNote } = data;
+  const { stats, recentNotes, topEntities, suggestedConnections, mostConnectedNotes } = data;
 
   const timeRangeLabel =
     timeRange === "1d" ? "Today" : timeRange === "7d" ? "This Week" : "This Month";
@@ -161,19 +161,28 @@ export function Dashboard() {
               </div>
             )}
 
-            {/* Most Connected Note */}
-            {features.connections && mostConnectedNote && (
+            {/* Most Connected Notes */}
+            {features.connections && mostConnectedNotes.length > 0 && (
               <div className="p-6 rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg">
-                <h2 className="text-sm font-medium text-muted-foreground mb-2">Most Connected</h2>
-                <Link
-                  to="/app/notes/$noteId"
-                  params={{ noteId: mostConnectedNote.id }}
-                  className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
-                >
-                  {mostConnectedNote.title}
-                </Link>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {mostConnectedNote.connectionCount} connections
+                <h2 className="text-sm font-medium text-muted-foreground mb-3">Most Connected</h2>
+                <div className="space-y-3">
+                  {mostConnectedNotes.map((note, index) => (
+                    <div key={note.id}>
+                      <Link
+                        to="/app/notes/$noteId"
+                        params={{ noteId: note.id }}
+                        className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
+                      >
+                        {note.title}
+                      </Link>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {note.connectionCount} connections
+                      </div>
+                      {index < mostConnectedNotes.length - 1 && (
+                        <div className="h-px bg-border/50 mt-3" />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

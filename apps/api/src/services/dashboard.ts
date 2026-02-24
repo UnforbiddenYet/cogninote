@@ -76,21 +76,25 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
       .orderBy(desc(notes.updatedAt))
       .limit(5),
 
-    // Most connected note (by connection count)
+    // Most connected notes (true total = source + target connection aggregated)
     db
       .select({
         noteId: sql<string>`note_id`,
-        connectionCount: sql<number>`count`,
+        connectionCount: sql<number>`total_count`,
       })
       .from(
         sql`(
-          SELECT source_note_id as note_id, count(*) as count FROM connections WHERE user_id = ${userId} GROUP BY source_note_id
-          UNION ALL
-          SELECT target_note_id as note_id, count(*) as count FROM connections WHERE user_id = ${userId} GROUP BY target_note_id
-        ) as connection_counts`,
+          SELECT note_id, COUNT(*) AS total_count
+          FROM (
+            SELECT source_note_id AS note_id FROM connections WHERE user_id = ${userId}
+            UNION ALL
+            SELECT target_note_id AS note_id FROM connections WHERE user_id = ${userId}
+          ) AS sides
+          GROUP BY note_id
+        ) AS connection_counts`,
       )
-      .orderBy(sql`count DESC`)
-      .limit(1),
+      .orderBy(sql`total_count DESC`)
+      .limit(3),
   ]);
 
   // Enrich recent notes with connection counts
@@ -104,24 +108,24 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
     })),
   );
 
-  // Get most connected note details
-  let mostConnectedNote = null;
-  if (mostConnectedResult.length > 0) {
-    const mcNote = mostConnectedResult[0];
-    const [noteDetail] = await db
-      .select({ id: notes.id, title: notes.title })
-      .from(notes)
-      .where(eq(notes.id, mcNote.noteId))
-      .limit(1);
-
-    if (noteDetail) {
-      mostConnectedNote = {
-        id: noteDetail.id,
-        title: noteDetail.title,
-        connectionCount: mcNote.connectionCount,
-      };
-    }
-  }
+  // Get most connected notes details
+  const mostConnectedNotes = (
+    await Promise.all(
+      mostConnectedResult.map(async (mcNote) => {
+        const [noteDetail] = await db
+          .select({ id: notes.id, title: notes.title })
+          .from(notes)
+          .where(eq(notes.id, mcNote.noteId))
+          .limit(1);
+        if (!noteDetail) return null;
+        return {
+          id: noteDetail.id,
+          title: noteDetail.title,
+          connectionCount: mcNote.connectionCount,
+        };
+      }),
+    )
+  ).filter((n) => n !== null);
 
   // LightRAG data (graceful degradation)
   let topEntities: Array<{ label: string; count: number }> = [];
@@ -149,6 +153,6 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
     recentNotes,
     topEntities,
     suggestedConnections,
-    mostConnectedNote,
+    mostConnectedNotes,
   };
 }

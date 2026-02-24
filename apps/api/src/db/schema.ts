@@ -70,6 +70,8 @@ export const connections = pgTable(
     sourceIdx: index("idx_connections_source").on(table.sourceNoteId),
     targetIdx: index("idx_connections_target").on(table.targetNoteId),
     userIdIdx: index("idx_connections_user_id").on(table.userId),
+    userSourceIdx: index("idx_connections_user_source").on(table.userId, table.sourceNoteId),
+    userTargetIdx: index("idx_connections_user_target").on(table.userId, table.targetNoteId),
   }),
 );
 
