@@ -205,7 +205,7 @@ function normalizeDocuments(result: any): any[] {
 /**
  * Index a note in LightRAG
  */
-export async function indexNote(userId: string, noteId: string, content: string): Promise<boolean> {
+export async function indexNote(noteId: string, content: string): Promise<boolean> {
   const fileSource = getNoteFileSource(noteId);
 
   try {
@@ -217,7 +217,7 @@ export async function indexNote(userId: string, noteId: string, content: string)
     );
 
     if (result) {
-      console.log(`Successfully indexed note ${noteId} for user ${userId}`);
+      console.log(`Successfully indexed note ${noteId}`);
       return true;
     }
 
@@ -232,7 +232,7 @@ export async function indexNote(userId: string, noteId: string, content: string)
 /**
  * Delete a note from LightRAG index
  */
-export async function deleteNote(userId: string, noteId: string): Promise<boolean> {
+export async function deleteNote(noteId: string): Promise<boolean> {
   try {
     const fileSource = getNoteFileSource(noteId);
     const docIds = await retryWithBackoff(async () => {
@@ -260,7 +260,7 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
     );
 
     if (result) {
-      console.log(`Successfully deleted note ${noteId} for user ${userId}`, result);
+      console.log(`Successfully deleted note ${noteId}`, result);
       return true;
     }
 
@@ -276,7 +276,6 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
  * Search notes semantically using LightRAG
  */
 export async function searchSemantic(
-  _userId: string,
   query: string,
   mode: QueryMode = "hybrid",
   limit: number = 20,
@@ -370,13 +369,9 @@ export async function generateSummary(content: string): Promise<string | null> {
 /**
  * Re-index a note by deleting existing document(s) then inserting updated content
  */
-export async function reindexNote(
-  userId: string,
-  noteId: string,
-  content: string,
-): Promise<boolean> {
-  await deleteNote(userId, noteId);
-  return indexNote(userId, noteId, content);
+export async function reindexNote(noteId: string, content: string): Promise<boolean> {
+  await deleteNote(noteId);
+  return indexNote(noteId, content);
 }
 
 /**
@@ -406,7 +401,6 @@ export async function healthCheck(): Promise<boolean> {
  * Get a subgraph from LightRAG centered on a given entity label
  */
 export async function getSubgraph(
-  _userId: string,
   label: string,
   maxDepth: number = 2,
   maxNodes: number = 50,
@@ -448,7 +442,7 @@ export async function getSubgraph(
 /**
  * Get all entity labels from LightRAG
  */
-export async function getEntityLabels(_userId: string): Promise<string[]> {
+export async function getEntityLabels(): Promise<string[]> {
   try {
     const result = await retryWithBackoff(() =>
       makeRequest<any>("/graph/label/list", "GET", undefined),
@@ -465,10 +459,7 @@ export async function getEntityLabels(_userId: string): Promise<string[]> {
 /**
  * Get popular entities from LightRAG, enriched with edge counts from subgraphs
  */
-export async function getPopularEntities(
-  userId: string,
-  limit: number = 20,
-): Promise<PopularEntity[]> {
+export async function getPopularEntities(limit: number = 20): Promise<PopularEntity[]> {
   try {
     const params = new URLSearchParams({ limit: String(limit) });
     const result = await retryWithBackoff(() =>
@@ -485,7 +476,7 @@ export async function getPopularEntities(
     // Fetch shallow subgraphs in parallel to get edge counts
     const entities = await Promise.all(
       items.slice(0, limit).map(async (label) => {
-        const subgraph = await getSubgraph(userId, label, 1, 30);
+        const subgraph = await getSubgraph(label, 1, 30);
         return {
           label,
           count: subgraph?.edges?.length || 0,
@@ -503,11 +494,7 @@ export async function getPopularEntities(
 /**
  * Search entities in LightRAG
  */
-export async function searchEntities(
-  _userId: string,
-  query: string,
-  limit: number = 10,
-): Promise<PopularEntity[]> {
+export async function searchEntities(query: string, limit: number = 10): Promise<PopularEntity[]> {
   try {
     const params = new URLSearchParams({ q: query, limit: String(limit) });
     const result = await retryWithBackoff(() =>
@@ -534,7 +521,7 @@ export async function searchEntities(
 /**
  * Check if a specific entity exists in LightRAG
  */
-export async function entityExists(_userId: string, name: string): Promise<boolean> {
+export async function entityExists(name: string): Promise<boolean> {
   try {
     const params = new URLSearchParams({ name });
     const result = await retryWithBackoff(() =>
@@ -551,7 +538,7 @@ export async function entityExists(_userId: string, name: string): Promise<boole
 /**
  * Get LightRAG pipeline status
  */
-export async function getPipelineStatus(_userId: string): Promise<any | null> {
+export async function getPipelineStatus(): Promise<any | null> {
   try {
     return await retryWithBackoff(() =>
       makeRequest<any>("/documents/pipeline_status", "GET", undefined),
@@ -622,7 +609,6 @@ function getQueryCleanResponse(r: LightRAGQueryResponse) {
 }
 
 export async function queryRAG(
-  _userId: string,
   query: string,
   mode: QueryMode,
   topK: number = 10,

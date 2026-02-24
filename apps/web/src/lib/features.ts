@@ -1,3 +1,3 @@
 export const features = {
-  connections: false,
+  connections: true,
 } as const;

@@ -9,7 +9,7 @@ export async function executeQuery(
 ) {
   const startTime = Date.now();
 
-  const response = await queryRAG(userId, query, mode, maxSources);
+  const response = await queryRAG(query, mode, maxSources);
   if (!response) return null;
 
   // Enrich sources with note metadata

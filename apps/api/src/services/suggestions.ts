@@ -1,7 +1,7 @@
 import { eq, and, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { aiSuggestions, notes } from "../db/schema";
-import { getPopularEntities, getSubgraph } from "./lightrag";
+import { getEntityLabels, getSubgraph } from "./lightrag";
 import { connectionExists, createConnection } from "./connections";
 
 /**
@@ -20,13 +20,34 @@ function extractNoteIds(filePath: string): string[] {
     .filter(Boolean) as string[];
 }
 
+const SUBGRAPH_CONCURRENCY = 10;
+
+async function withConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const batch = items.slice(i, i + limit);
+    const batchResults = await Promise.all(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 export async function generateConnectionSuggestions(
   userId: string,
   limit: number = 10,
 ): Promise<number> {
-  // Get popular entities as starting points for graph traversal
-  const popularEntities = await getPopularEntities(userId, 15);
-  if (popularEntities.length === 0) return 0;
+  // Get all entity labels — 1 LightRAG call
+  const allLabels = await getEntityLabels();
+  if (allLabels.length === 0) return 0;
+
+  // Fetch all subgraphs in parallel with concurrency limit
+  const subgraphs = await withConcurrency(allLabels, SUBGRAPH_CONCURRENCY, (label) =>
+    getSubgraph(label, 2, 50),
+  );
 
   // Track note pairs and the entities that bridge them
   const pairMap = new Map<
@@ -34,9 +55,9 @@ export async function generateConnectionSuggestions(
     { sourceNoteId: string; targetNoteId: string; bridgeEntities: string[]; score: number }
   >();
 
-  for (const entity of popularEntities) {
-    // Depth=2 lets us traverse across notes through shared concepts
-    const subgraph = await getSubgraph(userId, entity.label, 2, 50);
+  for (let idx = 0; idx < allLabels.length; idx++) {
+    const label = allLabels[idx]!;
+    const subgraph = subgraphs[idx];
     if (!subgraph || subgraph.nodes.length === 0) continue;
 
     // Collect all note UUIDs referenced by nodes in this subgraph
@@ -57,15 +78,15 @@ export async function generateConnectionSuggestions(
         const key = [noteIdList[i], noteIdList[j]].sort().join("|||");
         const existing = pairMap.get(key);
         if (existing) {
-          if (!existing.bridgeEntities.includes(entity.label)) {
-            existing.bridgeEntities.push(entity.label);
+          if (!existing.bridgeEntities.includes(label)) {
+            existing.bridgeEntities.push(label);
             existing.score = existing.bridgeEntities.length;
           }
         } else {
           pairMap.set(key, {
             sourceNoteId: noteIdList[i]!,
             targetNoteId: noteIdList[j]!,
-            bridgeEntities: [entity.label],
+            bridgeEntities: [label],
             score: 1,
           });
         }

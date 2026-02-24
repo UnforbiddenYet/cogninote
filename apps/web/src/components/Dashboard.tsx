@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, TrendingUp, Link2, Clock, Zap, Loader2, AlertCircle } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Zap, Loader2, AlertCircle } from "lucide-react";
 import { useDashboard } from "../hooks/useDashboard";
+import { SuggestionCard } from "../components/suggestions/SuggestionCard";
 import { features } from "../lib/features";
 import { NoteCard } from "../components/notes/NoteCard";
 
@@ -107,23 +108,7 @@ export function Dashboard() {
                 </div>
                 <div className="space-y-3">
                   {suggestedConnections.map((suggestion) => (
-                    <div
-                      key={suggestion.id}
-                      className="p-3 rounded-lg border border-border/50 bg-card/30 hover:bg-card/60 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-start gap-2 mb-1.5">
-                        <Link2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <div className="text-xs font-medium text-foreground">
-                            {suggestion.suggestionData.sourceTitle} &rarr;{" "}
-                            {suggestion.suggestionData.targetTitle}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground pl-6">
-                        Shared entities: {suggestion.suggestionData.sharedEntities.join(", ")}
-                      </div>
-                    </div>
+                    <SuggestionCard key={suggestion.id} suggestion={suggestion} />
                   ))}
                 </div>
               </div>

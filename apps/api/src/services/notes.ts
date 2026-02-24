@@ -1,7 +1,7 @@
-import { eq, ne, gte, and, desc, lt, sql, inArray } from "drizzle-orm";
+import { eq, ne, gte, and, desc, lt, sql, inArray, or } from "drizzle-orm";
 import removeMd from "remove-markdown";
 import { db } from "../db";
-import { notes } from "../db/schema";
+import { notes, connections, aiSuggestions } from "../db/schema";
 import {
   indexNote as indexNoteInLightRAG,
   deleteNote as deleteNoteFromLightRAG,
@@ -9,6 +9,7 @@ import {
   searchEntities,
   getSubgraph,
 } from "./lightrag";
+import { createDebouncer } from "../lib/debounce";
 
 type Note = {
   id: string;
@@ -23,25 +24,7 @@ type Note = {
   updatedAt: Date;
 };
 
-const reindexTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-function scheduleReindex(userId: string, note: { id: string; content: string }) {
-  const existing = reindexTimers.get(note.id);
-  if (existing) clearTimeout(existing);
-
-  function reindex() {
-    reindexTimers.delete(note.id);
-    reindexNoteInLightRAG(userId, note.id, note.content).catch((err) =>
-      console.error(`Failed to reindex note ${note.id} in LightRAG:`, err),
-    );
-  }
-
-  const timerID = setTimeout(() => {
-    reindex();
-  }, 60_000);
-
-  reindexTimers.set(note.id, timerID);
-}
+const scheduleReindex = createDebouncer(60_000);
 
 export function extractTitle(content: string): string {
   const match = content.match(/^#\s+(.+)/);
@@ -112,7 +95,7 @@ export async function createNote(
   const previewContent = toPreview(note.content);
 
   if (previewContent.length) {
-    indexNoteInLightRAG(userId, note.id, note.content).catch((err) => {
+    indexNoteInLightRAG(note.id, note.content).catch((err) => {
       console.error(`Failed to index note ${note.id} in LightRAG:`, err);
     });
   }
@@ -260,7 +243,11 @@ export async function updateNote(
   await db.update(notes).set(updateData).where(eq(notes.id, noteId));
 
   if (input.content !== undefined) {
-    scheduleReindex(userId, { id: noteId, content: input.content });
+    scheduleReindex(noteId, () =>
+      reindexNoteInLightRAG(noteId, input.content!).catch((err) =>
+        console.error(`Failed to reindex note ${noteId} in LightRAG:`, err),
+      ),
+    );
   }
 
   return await getNoteById(userId, noteId);
@@ -275,8 +262,33 @@ export async function deleteNote(userId: string, noteId: string): Promise<boolea
   // Soft delete
   await db.update(notes).set({ isArchived: true }).where(eq(notes.id, noteId));
 
+  // Delete connections involving this note
+  await db
+    .delete(connections)
+    .where(
+      and(
+        eq(connections.userId, userId),
+        or(eq(connections.sourceNoteId, noteId), eq(connections.targetNoteId, noteId)),
+      ),
+    );
+
+  // Reject pending suggestions referencing this note as source or target
+  await db
+    .update(aiSuggestions)
+    .set({ status: "rejected" })
+    .where(
+      and(
+        eq(aiSuggestions.userId, userId),
+        eq(aiSuggestions.status, "pending"),
+        or(
+          eq(aiSuggestions.noteId, noteId),
+          sql`${aiSuggestions.suggestionData}->>'targetNoteId' = ${noteId}`,
+        ),
+      ),
+    );
+
   // Remove from LightRAG index
-  deleteNoteFromLightRAG(userId, noteId).catch((err) => {
+  deleteNoteFromLightRAG(noteId).catch((err) => {
     console.error(`Failed to delete note ${noteId} from LightRAG:`, err);
   });
 
@@ -317,12 +329,12 @@ export async function getNoteEntities(
   if (!note) return [];
 
   // Search entities matching the note title
-  const entities = await searchEntities(userId, note.title, 10);
+  const entities = await searchEntities(note.title, 10);
   if (entities.length === 0) return [];
 
   // For the top entity, get its immediate subgraph
   const topEntity = entities[0];
-  const subgraph = await getSubgraph(userId, topEntity.label, 1, 20);
+  const subgraph = await getSubgraph(topEntity.label, 1, 20);
 
   return entities.map((entity) => ({
     label: entity.label,

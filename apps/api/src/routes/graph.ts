@@ -27,11 +27,10 @@ const app = new Hono()
     ),
     async (c) => {
       try {
-        const userId = c.get("userId");
         const { q, limit: rawLimit } = c.req.valid("query");
         const limit = Math.min(rawLimit, 50);
 
-        const entities = await searchEntities(userId, q, limit);
+        const entities = await searchEntities(q, limit);
 
         return c.json({ success: true, data: { entities } });
       } catch (error) {
@@ -53,11 +52,10 @@ const app = new Hono()
     ),
     async (c) => {
       try {
-        const userId = c.get("userId");
         const { limit: rawLimit } = c.req.valid("query");
         const limit = Math.min(rawLimit, 50);
 
-        const entities = await getPopularEntities(userId, limit);
+        const entities = await getPopularEntities(limit);
 
         return c.json({ success: true, data: { entities } });
       } catch (error) {
@@ -81,12 +79,11 @@ const app = new Hono()
     ),
     async (c) => {
       try {
-        const userId = c.get("userId");
         const { label, maxDepth: rawMaxDepth, maxNodes: rawMaxNodes } = c.req.valid("query");
         const maxDepth = Math.min(rawMaxDepth, 5);
         const maxNodes = Math.min(rawMaxNodes, 200);
 
-        const graph = await getSubgraph(userId, label, maxDepth, maxNodes);
+        const graph = await getSubgraph(label, maxDepth, maxNodes);
 
         return c.json({ success: true, data: { graph } });
       } catch (error) {
@@ -114,7 +111,7 @@ const app = new Hono()
 
       let entityCount = 0;
       try {
-        const labels = await getEntityLabels(userId);
+        const labels = await getEntityLabels();
         entityCount = labels.length;
       } catch {
         // LightRAG unavailable

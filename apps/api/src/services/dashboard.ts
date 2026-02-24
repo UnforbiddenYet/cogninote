@@ -2,7 +2,7 @@ import { eq, ne, and, sql, gte, desc } from "drizzle-orm";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
 import { getPopularEntities } from "./lightrag";
-import { getConnectionSuggestions, generateConnectionSuggestions } from "./suggestions";
+import { getConnectionSuggestions } from "./suggestions";
 import { getConnectionCount } from "./connections";
 import { toPreview } from "./notes";
 
@@ -128,20 +128,13 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
   let suggestedConnections: any[] = [];
 
   try {
-    topEntities = await getPopularEntities(userId, 10);
+    topEntities = await getPopularEntities(10);
   } catch {
     // LightRAG unavailable, continue with empty
   }
 
   try {
     suggestedConnections = await getConnectionSuggestions(userId, 3);
-
-    // Auto-generate suggestions if none exist and LightRAG is available
-    if (suggestedConnections.length === 0) {
-      generateConnectionSuggestions(userId, 5).catch((err) =>
-        console.error("Failed to auto-generate suggestions:", err),
-      );
-    }
   } catch {
     // Suggestions unavailable
   }
