@@ -10,6 +10,7 @@ import {
   getSubgraph,
 } from "./lightrag";
 import { createDebouncer } from "../lib/debounce";
+import { MINUTE_MS } from "../lib/time";
 
 type Note = {
   id: string;
@@ -24,7 +25,7 @@ type Note = {
   updatedAt: Date;
 };
 
-const scheduleReindex = createDebouncer(60_000);
+const scheduleReindex = createDebouncer(MINUTE_MS);
 
 export function extractTitle(content: string): string {
   const match = content.match(/^#\s+(.+)/);

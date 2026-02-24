@@ -5,6 +5,8 @@
  * Q&A, and document indexing
  */
 
+import { withCache, FIVE_MINUTES } from "../cache";
+
 // Configuration
 const LIGHTRAG_API_URL = process.env.LIGHTRAG_API_URL || "http://localhost:8020";
 const LIGHTRAG_TIMEOUT_MS = parseInt(process.env.LIGHTRAG_TIMEOUT_MS || "30000", 10);
@@ -460,35 +462,26 @@ export async function getEntityLabels(): Promise<string[]> {
  * Get popular entities from LightRAG, enriched with edge counts from subgraphs
  */
 export async function getPopularEntities(limit: number = 20): Promise<PopularEntity[]> {
-  try {
-    const params = new URLSearchParams({ limit: String(limit) });
-    const result = await retryWithBackoff(() =>
-      makeRequest<any>(`/graph/label/popular?${params}`, "GET", undefined),
-    );
+  return withCache(`popular_entities:${limit}`, FIVE_MINUTES, async () => {
+    try {
+      const params = new URLSearchParams({ limit: String(limit) });
+      const result = await retryWithBackoff(() =>
+        makeRequest<any>(`/graph/label/popular?${params}`, "GET", undefined),
+      );
 
-    if (!result) return [];
+      if (!result) return [];
 
-    // LightRAG returns plain string[] for popular labels
-    const items: string[] = Array.isArray(result)
-      ? result.map((item: any) => (typeof item === "string" ? item : item.label || item.name || ""))
-      : result.data || result.labels || [];
+      // LightRAG returns plain string[] for popular labels
+      const items: string[] = Array.isArray(result)
+        ? result.map((item: any) => (typeof item === "string" ? item : item.label || item.name || ""))
+        : result.data || result.labels || [];
 
-    // Fetch shallow subgraphs in parallel to get edge counts
-    const entities = await Promise.all(
-      items.slice(0, limit).map(async (label) => {
-        const subgraph = await getSubgraph(label, 1, 30);
-        return {
-          label,
-          count: subgraph?.edges?.length || 0,
-        };
-      }),
-    );
-
-    return entities;
-  } catch (error) {
-    console.error("getPopularEntities failed:", error);
-    return [];
-  }
+      return items.slice(0, limit).map((label) => ({ label, count: 0 }));
+    } catch (error) {
+      console.error("getPopularEntities failed:", error);
+      return [];
+    }
+  });
 }
 
 /**

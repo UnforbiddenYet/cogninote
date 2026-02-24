@@ -2,8 +2,8 @@ import { db } from "./db";
 import { user } from "./db/schema";
 import { purgeStaleEmptyNotes } from "./services/notes";
 import { generateConnectionSuggestions } from "./services/suggestions";
-
-const HOUR_MS = 60 * 60 * 1000;
+import { purgeExpiredEntries } from "./cache";
+import { HOUR_MS, MINUTE_MS } from "./lib/time";
 
 async function refreshConnectionSuggestions() {
   const users = await db.select({ id: user.id }).from(user);
@@ -27,4 +27,7 @@ export function startScheduler() {
   // Refresh connection suggestions for all users — every hour
   setInterval(refreshConnectionSuggestions, HOUR_MS);
   refreshConnectionSuggestions();
+
+  // Purge stale in-memory cache entries — every 10 minutes
+  setInterval(purgeExpiredEntries, 10 * MINUTE_MS);
 }
