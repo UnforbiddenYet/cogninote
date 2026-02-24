@@ -63,3 +63,9 @@ Analyze, ask questions and propose short overview of upcoming work before jumpin
 
 ## LightRAG Server API (OpenAPI) (use only when necessary)
 http://localhost:8020/openapi.json
+
+## Task scheduling
+- Never use hardcoded time signature for timers or intervals, import constants from `lib/time.ts`
+- Scheduled jobs live in `scheduler.ts`
+
+Cache heavy API responses using in-memory cache `cache.ts`
