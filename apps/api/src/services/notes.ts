@@ -6,6 +6,7 @@ import {
   indexNote as indexNoteInLightRAG,
   deleteNote as deleteNoteFromLightRAG,
   reindexNote as reindexNoteInLightRAG,
+  getIndexedNoteIds,
   searchEntities,
   getSubgraph,
 } from "./lightrag";
@@ -347,4 +348,34 @@ export async function getNoteEntities(
           .map((n) => ({ label: n.label }))
       : undefined,
   }));
+}
+
+/**
+ * Index notes that have content but are missing from LightRAG.
+ * Covers cases where indexing failed.
+ */
+export async function reconcileLightRAGIndex() {
+  const indexedIds = await getIndexedNoteIds();
+  if (indexedIds.size === 0) {
+    console.log("[reconcile] LightRAG returned 0 docs, skipping to avoid re-indexing everything");
+    return;
+  }
+
+  const allNotes = await db
+    .select({ id: notes.id, content: notes.content })
+    .from(notes)
+    .where(and(eq(notes.isArchived, false), ne(notes.content, "")));
+
+  const missing = allNotes.filter((n) => !indexedIds.has(n.id));
+  if (missing.length === 0) return;
+
+  console.log(`[reconcile] Found ${missing.length} notes missing from LightRAG, indexing...`);
+
+  for (const note of missing) {
+    try {
+      await indexNoteInLightRAG(note.id, note.content);
+    } catch (err) {
+      console.error(`[reconcile] Failed to index note ${note.id}:`, err);
+    }
+  }
 }

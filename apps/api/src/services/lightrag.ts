@@ -205,6 +205,31 @@ function normalizeDocuments(result: any): any[] {
 }
 
 /**
+ * Get the set of note IDs currently indexed in LightRAG
+ */
+export async function getIndexedNoteIds(): Promise<Set<string>> {
+  try {
+    const result = await retryWithBackoff(() =>
+      makeRequest<any>("/documents", "GET", undefined),
+    );
+
+    const docs = normalizeDocuments(result);
+    const ids = new Set<string>();
+
+    for (const doc of docs) {
+      const filePath = doc.file_path || doc.filePath || doc.file_source || doc.fileSource || "";
+      const noteId = getNoteIdFromFilePath(filePath);
+      if (noteId) ids.add(noteId);
+    }
+
+    return ids;
+  } catch (error) {
+    console.error("getIndexedNoteIds failed:", error);
+    return new Set();
+  }
+}
+
+/**
  * Index a note in LightRAG
  */
 export async function indexNote(noteId: string, content: string): Promise<boolean> {

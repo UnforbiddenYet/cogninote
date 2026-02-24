@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { user } from "./db/schema";
-import { purgeStaleEmptyNotes } from "./services/notes";
+import { purgeStaleEmptyNotes, reconcileLightRAGIndex } from "./services/notes";
 import { generateConnectionSuggestions } from "./services/suggestions";
 import { purgeExpiredEntries } from "./cache";
 import { HOUR_MS, MINUTE_MS } from "./lib/time";
@@ -21,12 +21,16 @@ async function refreshConnectionSuggestions() {
 
 export function startScheduler() {
   // Purge empty notes older than 24h — every hour
-  setInterval(purgeStaleEmptyNotes, HOUR_MS);
+  setInterval(purgeStaleEmptyNotes, 59 * MINUTE_MS);
   purgeStaleEmptyNotes();
 
   // Refresh connection suggestions for all users — every hour
   setInterval(refreshConnectionSuggestions, HOUR_MS);
   refreshConnectionSuggestions();
+
+  // Reconcile notes missing from LightRAG index — every hour
+  setInterval(reconcileLightRAGIndex, 61 * MINUTE_MS);
+  reconcileLightRAGIndex();
 
   // Purge stale in-memory cache entries — every 10 minutes
   setInterval(purgeExpiredEntries, 10 * MINUTE_MS);
