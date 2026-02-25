@@ -93,3 +93,46 @@
 }
 
 @import "./tiptap.css";
+
+/* Magic Island AI glow */
+@keyframes glow-spin {
+  from { --glow-angle: 0deg; }
+  to { --glow-angle: 360deg; }
+}
+
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.magic-island-glow {
+  position: relative;
+}
+
+.magic-island-glow::before,
+.magic-island-glow::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from var(--glow-angle),
+    #d4a017,
+    #e6b422,
+    #f0d060,
+    #e6b422,
+    #c8960f,
+    #e6b422,
+    #f0d060,
+    #e6b422,
+    #d4a017
+  );
+  animation: glow-spin 3s linear infinite;
+  z-index: -1;
+}
+
+.magic-island-glow::after {
+  filter: blur(12px);
+  opacity: 0.35;
+}

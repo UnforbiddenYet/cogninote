@@ -80,12 +80,12 @@ export function MagicIsland() {
   };
 
   return (
-    <div className="relative">
-      <div className="flex items-center gap-1 px-2 py-2 rounded-full border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl">
+    <div className={`relative ${isAIExpanded ? "magic-island-glow" : ""}`}>
+      <div className="relative z-10 flex items-center gap-1 px-2 py-2 rounded-full border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl">
         {isAIExpanded ? (
           <form
             onSubmit={handleSubmit}
-            className="flex items-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-full min-w-75"
+            className="flex items-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-full min-w-[480px]"
           >
             <Sparkles className="h-5 w-5 shrink-0" />
             <input
