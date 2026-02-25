@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, TrendingUp, Clock, Zap, Loader2, AlertCircle } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Zap, Loader2, AlertCircle, Link2, Database } from "lucide-react";
 import { useDashboard } from "../hooks/useDashboard";
 import { SuggestionCard } from "../components/suggestions/SuggestionCard";
 import { features } from "../lib/features";
@@ -167,7 +167,12 @@ export function Dashboard() {
             {/* Most Connected Notes */}
             {features.connections && mostConnectedNotes.length > 0 && (
               <div className="p-6 rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg">
-                <h2 className="text-sm font-medium text-muted-foreground mb-3">Most Connected</h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 rounded-lg bg-indigo-500/10">
+                    <Link2 className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-foreground">Most Connected</h2>
+                </div>
                 <div className="space-y-3">
                   {mostConnectedNotes.map((note, index) => (
                     <div key={note.id}>
@@ -192,7 +197,12 @@ export function Dashboard() {
 
             {/* Knowledge Base Stats */}
             <div className="p-6 rounded-2xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Knowledge Base</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <Database className="h-4 w-4 text-emerald-500" />
+                </div>
+                <h2 className="text-lg font-semibold text-foreground">Knowledge Base</h2>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Total Notes</span>
