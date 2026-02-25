@@ -80,8 +80,7 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
         </div>
       </div>
       <div className="text-xs text-muted-foreground pl-6">
-        Shared:{" "}
-        <SharedEntities entities={suggestion.suggestionData.sharedEntities} />
+        Shared: <SharedEntities entities={suggestion.suggestionData.sharedEntities} />
       </div>
     </div>
   );
