@@ -22,7 +22,7 @@ export async function logQuery(
 
 export async function getQueryHistory(userId: string, limit: number = 10, offset: number = 0) {
   const countResult = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(queryLogs)
     .where(eq(queryLogs.userId, userId));
 

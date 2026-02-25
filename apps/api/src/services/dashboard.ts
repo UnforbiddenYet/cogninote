@@ -34,19 +34,19 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
   ] = await Promise.all([
     // Total notes
     db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(notes)
       .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, ""))),
 
     // Total connections
     db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(connections)
       .where(eq(connections.userId, userId)),
 
     // Notes created in period
     db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(notes)
       .where(
         and(
@@ -59,7 +59,7 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
 
     // Connections created in period
     db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(connections)
       .where(and(eq(connections.userId, userId), gte(connections.createdAt, startDate))),
 
@@ -80,7 +80,7 @@ export async function getDashboardData(userId: string, timeRange: TimeRange = "7
     db
       .select({
         noteId: sql<string>`note_id`,
-        connectionCount: sql<number>`total_count`,
+        connectionCount: sql<number>`total_count::int`,
       })
       .from(
         sql`(

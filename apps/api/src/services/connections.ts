@@ -90,7 +90,7 @@ export async function getConnectionsForNote(userId: string, noteId: string) {
 
 export async function getConnectionCount(userId: string, noteId: string) {
   const result = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(connections)
     .where(
       and(

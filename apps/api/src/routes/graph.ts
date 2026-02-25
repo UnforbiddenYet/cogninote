@@ -190,11 +190,11 @@ const app = new Hono()
 
       const [noteCountResult, connectionCountResult] = await Promise.all([
         db
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql<number>`count(*)::int` })
           .from(notes)
           .where(and(eq(notes.userId, userId), eq(notes.isArchived, false))),
         db
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql<number>`count(*)::int` })
           .from(connections)
           .where(eq(connections.userId, userId)),
       ]);
