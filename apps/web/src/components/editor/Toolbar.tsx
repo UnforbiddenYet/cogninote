@@ -166,7 +166,7 @@ export function Toolbar({
   if (!editor || !state) return null;
 
   return (
-    <div className="sticky top-0 z-10 bg-background border-b border-border flex items-center gap-0.5 px-2 py-1.5 flex-wrap">
+    <div className="rounded-t-2xl sticky top-0 z-10 bg-background border-b border-border flex items-center gap-0.5 px-2 py-1.5 flex-wrap">
       {toolbarGroups.map((group, gi) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static toolbar groups
         <div key={gi} className="flex items-center gap-0.5">

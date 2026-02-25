@@ -58,7 +58,7 @@ export function NoteEditor({
           {!saving && lastSaved && <span>{hasUnsavedChanges ? "Unsaved changes" : "Saved"}</span>}
         </div>
       </Toolbar>
-      <div className="min-h-screen bg-linear-to-br from-white via-white to-gray-50 relative">
+      <div className="min-h-screen rounded-b-2xl bg-linear-to-br from-white via-white to-gray-50 relative pb-20">
         <EditorContent editor={editor} className="mx-auto px-2 sm:px-4" />
       </div>
     </div>
