@@ -2,6 +2,7 @@ import { eq, ne, gte, and, desc, lt, sql, inArray, or } from "drizzle-orm";
 import removeMd from "remove-markdown";
 import { db } from "../db";
 import { notes, connections, aiSuggestions } from "../db/schema";
+import { getConnectionCount } from "./connections";
 import {
   indexNote as indexNoteInLightRAG,
   deleteNote as deleteNoteFromLightRAG,
@@ -185,7 +186,7 @@ export async function listNotes(
   offset = 0,
 ): Promise<{ notes: Note[]; total: number }> {
   const countResult = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(*)::int` })
     .from(notes)
     .where(and(eq(notes.userId, userId), eq(notes.isArchived, false), ne(notes.content, "")));
 
@@ -199,18 +200,21 @@ export async function listNotes(
     .limit(limit)
     .offset(offset);
 
-  const notesList = result.map((note) => ({
-    id: note.id,
-    userId: note.userId,
-    title: note.title,
-    content: note.content,
-    preview: toPreview(note.content),
-    color: note.color || undefined,
-    isArchived: note.isArchived,
-    summary: note.summary || undefined,
-    createdAt: note.createdAt,
-    updatedAt: note.updatedAt,
-  }));
+  const notesList = await Promise.all(
+    result.map(async (note) => ({
+      id: note.id,
+      userId: note.userId,
+      title: note.title,
+      content: note.content,
+      preview: toPreview(note.content),
+      color: note.color || undefined,
+      isArchived: note.isArchived,
+      summary: note.summary || undefined,
+      connectionCount: await getConnectionCount(userId, note.id),
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+    })),
+  );
 
   return { notes: notesList, total };
 }
