@@ -25,6 +25,14 @@ export function invalidate(key: string) {
   store.delete(key);
 }
 
+export function invalidatePrefix(prefix: string) {
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) {
+      store.delete(key);
+    }
+  }
+}
+
 export function purgeExpiredEntries() {
   const now = Date.now();
   for (const [key, entry] of store) {
