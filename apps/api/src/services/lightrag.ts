@@ -8,7 +8,6 @@
 import createClient from "openapi-fetch";
 import type { paths, components } from "./lightrag-types";
 import { withCache, FIVE_MINUTES } from "../cache";
-import { MINUTE_MS, SECOND_MS } from "../lib/time";
 import { pollUntil } from "../lib/pollUntil";
 
 // Configuration
@@ -461,6 +460,37 @@ export async function getPipelineStatus() {
   } catch (error) {
     console.error("getPipelineStatus failed:", error);
     return null;
+  }
+}
+
+export async function mergeEntities(
+  entitiesToChange: string[],
+  entityToChangeInto: string,
+): Promise<boolean> {
+  try {
+    const { data } = await retryWithBackoff(() =>
+      client.POST("/graph/entities/merge", {
+        body: { entities_to_change: entitiesToChange, entity_to_change_into: entityToChangeInto },
+      }),
+    );
+    return !!data;
+  } catch (error) {
+    console.error("mergeEntities failed:", error);
+    return false;
+  }
+}
+
+export async function deleteEntity(entityName: string): Promise<boolean> {
+  try {
+    const { data } = await retryWithBackoff(() =>
+      client.DELETE("/documents/delete_entity", {
+        body: { entity_name: entityName },
+      }),
+    );
+    return !!data;
+  } catch (error) {
+    console.error("deleteEntity failed:", error);
+    return false;
   }
 }
 

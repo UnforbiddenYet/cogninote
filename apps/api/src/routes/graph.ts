@@ -8,9 +8,12 @@ import {
   getPopularEntities,
   getSubgraph,
   getEntityLabels,
+  mergeEntities,
+  deleteEntity,
 } from "../services/lightrag";
 import { db } from "../db";
 import { notes, connections } from "../db/schema";
+import { invalidatePrefix } from "../cache";
 
 const app = new Hono()
 
@@ -92,6 +95,93 @@ const app = new Hono()
       }
     },
   )
+
+  // GET /api/graph/entities/list
+  .get(
+    "/entities/list",
+    requireAuth(),
+    vValidator(
+      "query",
+      v.object({
+        q: v.optional(v.string()),
+        limit: v.optional(v.pipe(v.string(), v.transform(Number)), "50"),
+        offset: v.optional(v.pipe(v.string(), v.transform(Number)), "0"),
+      }),
+    ),
+    async (c) => {
+      try {
+        const { q, limit: rawLimit, offset } = c.req.valid("query");
+        const limit = Math.min(rawLimit, 200);
+
+        let entities: string[];
+        let total: number;
+
+        if (q && q.length > 0) {
+          const results = await searchEntities(q, 100);
+          const all = results.map((e) => e.label);
+          total = all.length;
+          entities = all.slice(offset, offset + limit);
+        } else {
+          const results = await getPopularEntities(offset + limit);
+          entities = results.slice(offset).map((e) => e.label);
+          // If we got a full page, there are likely more
+          total = results.length < offset + limit ? results.length : offset + limit + 1;
+        }
+
+        return c.json({ success: true, data: { entities, total } });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to list entities";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // POST /api/graph/entities/merge
+  .post(
+    "/entities/merge",
+    requireAuth(),
+    vValidator(
+      "json",
+      v.object({
+        entitiesToChange: v.pipe(v.array(v.string()), v.minLength(1)),
+        entityToChangeInto: v.pipe(v.string(), v.minLength(1)),
+      }),
+    ),
+    async (c) => {
+      try {
+        const { entitiesToChange, entityToChangeInto } = c.req.valid("json");
+        const success = await mergeEntities(entitiesToChange, entityToChangeInto);
+
+        if (!success) {
+          return c.json({ success: false, error: "Merge failed" }, 500);
+        }
+
+        invalidatePrefix("popular_entities:");
+        return c.json({ success: true, data: { merged: true } });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Merge failed";
+        return c.json({ success: false, error: message }, 500);
+      }
+    },
+  )
+
+  // DELETE /api/graph/entities/:name
+  .delete("/entities/:name", requireAuth(), async (c) => {
+    try {
+      const name = decodeURIComponent(c.req.param("name"));
+      const success = await deleteEntity(name);
+
+      if (!success) {
+        return c.json({ success: false, error: "Delete failed" }, 500);
+      }
+
+      invalidatePrefix("popular_entities:");
+      return c.json({ success: true, data: { deleted: true } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Delete failed";
+      return c.json({ success: false, error: message }, 500);
+    }
+  })
 
   // GET /api/graph/stats
   .get("/stats", requireAuth(), async (c) => {
