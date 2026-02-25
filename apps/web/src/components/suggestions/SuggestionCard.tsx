@@ -10,6 +10,32 @@ type Suggestion = {
   };
 };
 
+const VISIBLE_ENTITY_COUNT = 4;
+
+function SharedEntities({ entities }: { entities: string[] }) {
+  const visible = entities.slice(0, VISIBLE_ENTITY_COUNT);
+  const remaining = entities.slice(VISIBLE_ENTITY_COUNT);
+
+  return (
+    <span>
+      {visible.join(", ")}
+      {remaining.length > 0 && (
+        <>
+          {", "}
+          <span className="relative group/more inline-block">
+            <span className="cursor-default text-primary/80 font-medium">
+              +{remaining.length} more
+            </span>
+            <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover/more:block z-20 w-64 max-h-40 overflow-y-auto rounded-md border border-border bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-md">
+              {remaining.join(", ")}
+            </div>
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
 export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   const accept = useAcceptSuggestion();
   const dismiss = useDismissSuggestion();
@@ -54,7 +80,8 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
         </div>
       </div>
       <div className="text-xs text-muted-foreground pl-6">
-        Shared entities: {suggestion.suggestionData.sharedEntities.join(", ")}
+        Shared:{" "}
+        <SharedEntities entities={suggestion.suggestionData.sharedEntities} />
       </div>
     </div>
   );
