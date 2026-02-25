@@ -144,15 +144,18 @@ export function Dashboard() {
                     <Zap className="h-4 w-4 text-orange-500" />
                   </div>
                   <h2 className="text-lg font-semibold text-foreground">Key Topics</h2>
+                  <Link
+                    to="/app/entities"
+                    className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Manage
+                  </Link>
                 </div>
                 <div className="space-y-3">
                   {topEntities.map((entity, index) => (
                     <div key={entity.label}>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium text-foreground">{entity.label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {entity.count} mentions
-                        </span>
                       </div>
                       {index < topEntities.length - 1 && <div className="h-px bg-border/50 mt-3" />}
                     </div>
