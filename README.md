@@ -11,19 +11,41 @@
 
 ## Features
 
-**Rich text editor** — markdown based powered by Tiptap.
+**Rich text editor** — Markdown-based, powered by Tiptap.
 
-![Editor](images/editor.png)
+![Editor](docs/images/editor.png)
 
-**Ask questions, get grounded answers** — natural language queries answered by your own notes via LightRAG (hybrid knowledge graph with vector retrieval).
+**Ask questions, get grounded answers** — natural language queries answered by your own notes via LightRAG (hybrid knowledge graph + vector retrieval).
 
-![AI Query](images/query.png)
+![AI Query](docs/images/query.png)
 
-**AI-suggested connections** — it automatically find notes that share concepts, then suggests links you can accept or dismiss with one click.
+**Dashboard** — stats, recent notes, top entities from your knowledge graph, and link suggestions for notes that share the same concepts.
 
-**Dashboard** — stats, recent notes, top entities from your knowledge graph, and pending suggestions at a glance.
+![Dashboard](docs/images/dashboard.png)
 
-![Dashboard](images/dashboard.png)
+**Notes library** — browse, search, and manage all your notes in one place.
+
+![Notes Library](docs/images/notes.png)
+
+**Entity explorer** — view and manage AI-extracted topics and entities from your knowledge graph.
+
+![Entities](docs/images/entities.png)
+
+## Quick Start
+
+```bash
+cp .env.example .env
+cp .env.lightrag.example .env.lightrag
+docker compose up -d
+open http://localhost:3001
+```
+
+Configure your LLM provider in `.env.lightrag` (defaults to Gemini API). LightRAG requires LLM and embedding models for document indexing and querying.
+See [LightRAG Server docs](https://github.com/HKUDS/LightRAG/blob/main/lightrag/api/README.md#before-starting-lightrag-server) for details.
+
+### LightRAG Server Web UI
+
+Access LightRAG's Web UI at [http://localhost:8020](http://localhost:8020) for document indexing status, bulk import, and knowledge graph exploration.
 
 ## Architecture
 
@@ -37,9 +59,9 @@ graph LR
 
 Cogninote is a **monorepo** (`apps/api` + `apps/web`) where a single Hono process serves both the REST API and the built React SPA.
 
-**RAG pipeline:** When a note is saved it gets indexed into LightRAG as a markdown document. On query, LightRAG performs a hybrid retrieval (knowledge graph traversal + vector similarity) to providing more accurate and contextually relevant responses.
+**RAG pipeline:** When a note is saved it gets indexed into LightRAG as a Markdown document. On query, LightRAG performs hybrid retrieval (knowledge graph traversal + vector similarity) for contextually relevant, grounded responses.
 
-**End-to-end type safety:** The API exports its Hono route types directly. The frontend gets fully typed API calls via `hc` (Hono RPC) — no OpenAPI spec, no codegen, no drift.
+**End-to-end type safety:** The API exports its Hono route types directly. The frontend gets fully typed API calls via `hc` (Hono RPC). The LightRAG client is generated from its OpenAPI spec using `openapi-typescript` and `openapi-fetch`.
 
 ## Tech Stack
 
@@ -49,7 +71,7 @@ Cogninote is a **monorepo** (`apps/api` + `apps/web`) where a single Hono proces
 | Backend | **Hono** | Lightweight, runs anywhere, serves both API and SPA from one process |
 | Frontend | **React + TanStack Router + TanStack Query** | File-based type-safe routing, declarative server state with caching |
 | Client state | **Zustand** | Minimal boilerplate for editor save state and UI toggles |
-| Editor | **Tiptap** | Extensible rich text with bidirectional markdown serialization |
+| Editor | **Tiptap** | Extensible rich text with bidirectional Markdown serialization |
 | ORM | **Drizzle** | Type-safe SQL, schema-as-code, zero codegen |
 | Database | **PostgreSQL 15** | Reliable, JSONB for flexible suggestion data |
 | Auth | **Better Auth** | Session-based auth with Drizzle adapter, no external service |
@@ -58,22 +80,6 @@ Cogninote is a **monorepo** (`apps/api` + `apps/web`) where a single Hono proces
 | Styling | **Tailwind CSS** | Utility-first, custom CSS variables for theming |
 | Linting | **Biome** | Single tool for formatting + linting, fast |
 
-## Quick Start
-
-```bash
-cp .env.example .env
-cp .env.lightrag.example .env.lightrag
-docker compose up -d
-open http://localhost:3001
-```
-
-Configure your LLM provider in `.env.lightrag` (defaults to Gemini API) as LightRAG requires the utilization of LLM and Embedding models to accomplish document indexing and querying tasks.
-See [LightRAG Server docs for details](https://github.com/HKUDS/LightRAG/blob/main/lightrag/api/README.md#before-starting-lightrag-server)
-
-### LightRAG Server Web UI
-
-Access LightRAG's Web UI at [http://localhost:8020](http://localhost:8020) to observe document indexing status, ability to document bulk import and knowledge graph exploration.
-
 ## Development
 
 ```bash
@@ -81,10 +87,10 @@ Access LightRAG's Web UI at [http://localhost:8020](http://localhost:8020) to ob
 
 bun install                             # Install dependencies
 docker compose up -d db lightrag        # Start PostgreSQL + LightRAG
-cp apps/api/.env.example apps/api/.env  # Configure Backend environment
-cp apps/web/.env.example apps/web/.env  # Configure Frontend environment
+cp apps/api/.env.example apps/api/.env  # Configure backend environment
+cp apps/web/.env.example apps/web/.env  # Configure frontend environment
 
-bun run dev  # Starts both dev servers Web on :3000 and API on :3001
+bun run dev  # Starts both dev servers — Web on :3000, API on :3001
 ```
 
 ## Project Structure
