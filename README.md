@@ -5,31 +5,53 @@
   <sub>Take notes. Ask questions in plain language. Let the AI discover connections and insights.</sub>
 </p>
 
+![Dashboard](docs/images/dashboard.png)
+
 <p align="center">
-  <sub>Self-hosted via Docker. Bring Your Own Key — works with Claude, Gemini, Mistral, llama.cpp, LM Studio, and more.</sub>
+  <sub>Self-hosted via Docker. Bring Your Own Key — works with Claude, Gemini, OpenAI, llama.cpp, LM Studio, and more.</sub>
 </p>
 
 ## Features
 
-**Rich text editor** — Markdown-based, powered by Tiptap.
+<details>
+
+<summary>Rich text editor — Markdown-based, powered by Tiptap.</summary>
 
 ![Editor](docs/images/editor.png)
 
-**Ask questions, get grounded answers** — natural language queries answered by your own notes via LightRAG (hybrid knowledge graph + vector retrieval).
+</details>
+
+<details>
+
+<summary>Ask questions, get grounded answers — natural language queries answered by your own notes via LightRAG (hybrid knowledge graph + vector retrieval).</summary>
 
 ![AI Query](docs/images/query.png)
 
-**Dashboard** — stats, recent notes, top entities from your knowledge graph, and link suggestions for notes that share the same concepts.
+</details>
+
+<details>
+
+<summary>Dashboard — stats, recent notes, top entities from your knowledge graph, and link suggestions for notes that share the same concepts.</summary>
 
 ![Dashboard](docs/images/dashboard.png)
 
-**Notes library** — browse, search, and manage all your notes in one place.
+</details>
+
+<details>
+
+<summary>Notes library — browse, search, and manage all your notes in one place.</summary>
 
 ![Notes Library](docs/images/notes.png)
 
-**Entity explorer** — view and manage AI-extracted topics and entities from your knowledge graph.
+</details>
+
+<details>
+
+<summary>Entity explorer — view and manage AI-extracted topics and entities from your knowledge graph. </summary>
 
 ![Entities](docs/images/entities.png)
+
+</details>
 
 ## Quick Start
 
@@ -37,7 +59,7 @@
 cp .env.example .env
 cp .env.lightrag.example .env.lightrag
 docker compose up -d
-open http://localhost:3001
+open http://localhost:3000
 ```
 
 Configure your LLM provider in `.env.lightrag` (defaults to Gemini API). LightRAG requires LLM and embedding models for document indexing and querying.
@@ -63,17 +85,19 @@ Cogninote is a **monorepo** (`apps/api` + `apps/web`) where a single Hono proces
 
 **End-to-end type safety:** The API exports its Hono route types directly. The frontend gets fully typed API calls via `hc` (Hono RPC). The LightRAG client is generated from its OpenAPI spec using `openapi-typescript` and `openapi-fetch`.
 
+**Scheduler:** Background scheduler handles suggestion generation, index reconciliation, and cache cleanup
+
 ## Tech Stack
 
 | Layer | Choice | Why |
 |---|---|---|
 | Runtime | **Bun** | Fast startup, native TypeScript, built-in workspace support |
 | Backend | **Hono** | Lightweight, runs anywhere, serves both API and SPA from one process |
-| Frontend | **React + TanStack Router + TanStack Query** | File-based type-safe routing, declarative server state with caching |
+| Frontend | **React + TanStack Router + TanStack Query** | File-based type-safe routing, efficient server state and data fetching |
 | Client state | **Zustand** | Minimal boilerplate for editor save state and UI toggles |
 | Editor | **Tiptap** | Extensible rich text with bidirectional Markdown serialization |
-| ORM | **Drizzle** | Type-safe SQL, schema-as-code, zero codegen |
-| Database | **PostgreSQL 15** | Reliable, JSONB for flexible suggestion data |
+| ORM | **Drizzle** | Type-safe SQL, schema-as-code |
+| Database | **PostgreSQL 15** | Reliable, fast database |
 | Auth | **Better Auth** | Session-based auth with Drizzle adapter, no external service |
 | Validation | **Valibot** | Lightweight schema validation integrated with Hono middleware |
 | RAG | **LightRAG** | Hybrid graph + vector retrieval — better contextual answers than pure vector search |
@@ -114,6 +138,6 @@ cogninote/
 │       │   └── lib/          # API client, utilities
 │       └── package.json
 ├── docker-compose.yml
-├── Dockerfile                # Multi-stage (build + runtime)
+├── Dockerfile                # Multi-stage (build + runtime) for api & web apps
 └── biome.json                # Shared linter config
 ```
