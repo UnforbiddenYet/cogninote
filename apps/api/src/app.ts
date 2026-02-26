@@ -9,7 +9,6 @@ import queryRoutes from "./routes/query";
 import suggestionsRoutes from "./routes/suggestions";
 import dashboardRoutes from "./routes/dashboard";
 import graphRoutes from "./routes/graph";
-import { healthCheck as lightRAGHealth } from "./services/lightrag";
 
 const app = new Hono()
   // Middleware
@@ -22,15 +21,9 @@ const app = new Hono()
   )
   // Health check
   .get("/health", async (c) => {
-    const lightRAGHealthy = await lightRAGHealth();
-
     return c.json({
       status: "ok",
       timestamp: new Date().toISOString(),
-      services: {
-        database: "ok",
-        lightrag: lightRAGHealthy ? "ok" : "degraded",
-      },
     });
   })
   // API routes
