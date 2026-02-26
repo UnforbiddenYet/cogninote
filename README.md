@@ -56,7 +56,6 @@
 ## Quick Start
 
 ```bash
-cp .env.example .env
 cp .env.lightrag.example .env.lightrag
 docker compose up -d
 open http://localhost:3000
