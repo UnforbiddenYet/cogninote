@@ -1,9 +1,12 @@
 <h1 align="center">Cogninote</h1>
 
-<p align="center">
-  <strong>AI-First Personal Knowledge Base</strong><br>
-  <sub>Take notes. Ask questions in plain language. Let the AI discover connections and insights.</sub>
-</p>
+<h3 align="center">
+  AI-First Personal Knowledge Base
+</h3>
+
+<p align="center">Take notes. Ask questions in plain language. Let the AI discover connections and insights.</p>
+
+<br/>
 
 ![Dashboard](docs/images/dashboard.png)
 
