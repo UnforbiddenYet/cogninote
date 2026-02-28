@@ -5,6 +5,7 @@ import {
   createNote,
   findOrCreateEmptyNote,
   getNoteById,
+  getNotesByIds,
   listNotes,
   updateNote,
   deleteNote,
@@ -171,9 +172,26 @@ const app = new Hono()
 
       const noteConnections = await getConnectionsForNote(userId, noteId);
 
+      const connectedNoteIds = noteConnections.map((conn) =>
+        conn.sourceNoteId === noteId ? conn.targetNoteId : conn.sourceNoteId,
+      );
+      const connectedNotes = await getNotesByIds(userId, connectedNoteIds);
+      const noteTitlesById = new Map(connectedNotes.map((n) => [n.id, n.title]));
+
+      const enriched = noteConnections.map((conn) => {
+        const connectedNoteId = conn.sourceNoteId === noteId ? conn.targetNoteId : conn.sourceNoteId;
+        return {
+          id: conn.id,
+          noteId: connectedNoteId,
+          noteTitle: noteTitlesById.get(connectedNoteId) ?? "Untitled",
+          connectionType: conn.connectionType,
+          description: conn.description,
+        };
+      });
+
       return c.json({
         success: true,
-        data: { connections: noteConnections },
+        data: { connections: enriched },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get related notes";

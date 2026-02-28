@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { fetchNotes, fetchNote, updateNote, createNote, deleteNote } from "../lib/api/notes";
+import { fetchNotes, fetchNote, fetchRelatedNotes, updateNote, createNote, deleteNote } from "../lib/api/notes";
 
 type FetchNoteNoteId = Parameters<typeof fetchNote>[0];
 type FetchNotesQuery = Parameters<typeof fetchNotes>[0];
+
+type FetchRelatedNoteId = Parameters<typeof fetchRelatedNotes>[0];
 
 // Query keys factory
 export const noteKeys = {
   all: ["notes"] as const,
   list: (params: FetchNotesQuery) => [...noteKeys.all, "list", params] as const,
   detail: (id: FetchNoteNoteId) => [...noteKeys.all, "detail", id] as const,
+  related: (id: FetchRelatedNoteId) => [...noteKeys.all, "related", id] as const,
 };
 
 // Query Hooks
@@ -25,6 +28,14 @@ export function useNote(noteId: FetchNoteNoteId) {
   return useQuery({
     queryKey: noteKeys.detail(noteId),
     queryFn: () => fetchNote(noteId),
+    enabled: !!noteId,
+  });
+}
+
+export function useRelatedNotes(noteId: FetchRelatedNoteId) {
+  return useQuery({
+    queryKey: noteKeys.related(noteId),
+    queryFn: () => fetchRelatedNotes(noteId),
     enabled: !!noteId,
   });
 }

@@ -47,6 +47,20 @@ export async function createNote(json: InferReqJson<(typeof honoClient.api.notes
   return response.data.note;
 }
 
+export async function fetchRelatedNotes(
+  noteId: InferPathParam<
+    (typeof honoClient.api.notes)[":noteId"]["related"]["$get"],
+    "noteId"
+  >,
+) {
+  const response = await parseResponse(
+    honoClient.api.notes[":noteId"].related.$get({
+      param: { noteId },
+    }),
+  );
+  return response.data.connections;
+}
+
 export async function deleteNote(
   noteId: InferPathParam<(typeof honoClient.api.notes)[":noteId"]["$delete"], "noteId">,
 ) {
