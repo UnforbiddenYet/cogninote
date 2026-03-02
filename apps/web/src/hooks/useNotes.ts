@@ -1,5 +1,14 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { fetchNotes, fetchNote, fetchRelatedNotes, updateNote, createNote, deleteNote } from "../lib/api/notes";
+import {
+  fetchNotes,
+  fetchNote,
+  fetchRelatedNotes,
+  updateNote,
+  createNote,
+  deleteNote,
+} from "../lib/api/notes";
+import { deleteConnection } from "../lib/api/connections";
+import { dashboardKeys } from "./useDashboard";
 
 type FetchNoteNoteId = Parameters<typeof fetchNote>[0];
 type FetchNotesQuery = Parameters<typeof fetchNotes>[0];
@@ -72,6 +81,18 @@ export function useDeleteNote() {
       queryClient.invalidateQueries({
         queryKey: noteKeys.all,
       });
+    },
+  });
+}
+
+export function useDeleteConnection(noteId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteConnection,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: noteKeys.related(noteId) });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }

@@ -48,10 +48,7 @@ export async function createNote(json: InferReqJson<(typeof honoClient.api.notes
 }
 
 export async function fetchRelatedNotes(
-  noteId: InferPathParam<
-    (typeof honoClient.api.notes)[":noteId"]["related"]["$get"],
-    "noteId"
-  >,
+  noteId: InferPathParam<(typeof honoClient.api.notes)[":noteId"]["related"]["$get"], "noteId">,
 ) {
   const response = await parseResponse(
     honoClient.api.notes[":noteId"].related.$get({

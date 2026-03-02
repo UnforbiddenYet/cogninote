@@ -179,7 +179,8 @@ const app = new Hono()
       const noteTitlesById = new Map(connectedNotes.map((n) => [n.id, n.title]));
 
       const enriched = noteConnections.map((conn) => {
-        const connectedNoteId = conn.sourceNoteId === noteId ? conn.targetNoteId : conn.sourceNoteId;
+        const connectedNoteId =
+          conn.sourceNoteId === noteId ? conn.targetNoteId : conn.sourceNoteId;
         return {
           id: conn.id,
           noteId: connectedNoteId,
