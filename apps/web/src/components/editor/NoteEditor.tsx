@@ -2,9 +2,11 @@ import { useRef, useEffect } from "react";
 import { EditorContent } from "@tiptap/react";
 
 import { useMarkdownEditor } from "../../hooks/useMarkdownEditor";
+import { ConnectedNotesMenu } from "../notes/ConnectedNotesMenu";
 import { Toolbar } from "./Toolbar";
 
 type EditorProps = {
+  noteId: string;
   content: string;
   onContentChange: (content: string) => void;
   saving?: boolean;
@@ -13,6 +15,7 @@ type EditorProps = {
 };
 
 export function NoteEditor({
+  noteId,
   content,
   onContentChange,
   saving = false,
@@ -56,6 +59,7 @@ export function NoteEditor({
       <Toolbar editor={editor}>
         <div className="flex items-center gap-3 text-sm flex-1 justify-end">
           {!saving && lastSaved && <span>{hasUnsavedChanges ? "Unsaved changes" : "Saved"}</span>}
+          <ConnectedNotesMenu noteId={noteId} />
         </div>
       </Toolbar>
       <div className="min-h-screen rounded-b-2xl bg-linear-to-br from-white via-white to-gray-50 relative pb-20">

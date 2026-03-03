@@ -1,6 +1,6 @@
 import { eq, and, or, sql } from "drizzle-orm";
 import { db } from "../db";
-import { connections, notes } from "../db/schema";
+import { connections, notes, aiSuggestions } from "../db/schema";
 
 type ConnectionType = "manual" | "ai_suggested";
 
@@ -107,6 +107,32 @@ export async function deleteConnection(userId: string, connectionId: string) {
     .delete(connections)
     .where(and(eq(connections.id, connectionId), eq(connections.userId, userId)))
     .returning();
+
+  if (result.length > 0) {
+    const { sourceNoteId, targetNoteId } = result[0];
+
+    // Reject any matching AI suggestions to prevent re-suggestion
+    await db
+      .update(aiSuggestions)
+      .set({ status: "rejected" })
+      .where(
+        and(
+          eq(aiSuggestions.userId, userId),
+          eq(aiSuggestions.suggestionType, "link"),
+          eq(aiSuggestions.status, "pending"),
+          or(
+            and(
+              sql`${aiSuggestions.suggestionData}->>'sourceNoteId' = ${sourceNoteId}`,
+              sql`${aiSuggestions.suggestionData}->>'targetNoteId' = ${targetNoteId}`,
+            ),
+            and(
+              sql`${aiSuggestions.suggestionData}->>'sourceNoteId' = ${targetNoteId}`,
+              sql`${aiSuggestions.suggestionData}->>'targetNoteId' = ${sourceNoteId}`,
+            ),
+          ),
+        ),
+      );
+  }
 
   return result.length > 0;
 }

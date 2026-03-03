@@ -52,6 +52,7 @@ export function NoteDetail({ noteId }: { noteId: string }) {
   return (
     <Suspense fallback={null}>
       <NoteEditor
+        noteId={noteId}
         content={initialContent}
         onContentChange={handleContentChange}
         saving={saving}

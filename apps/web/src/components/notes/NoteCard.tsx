@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Link2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { features } from "../../lib/features";
+import { ConnectedNotesMenu } from "./ConnectedNotesMenu";
 
 type Note = {
   id: string;
@@ -36,10 +37,7 @@ export function NoteCard({ note, onDelete }: { note: Note; onDelete?: () => void
             </button>
           )}
           {features.connections && !!note.connectionCount && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Link2 className="h-3 w-3" />
-              <span>{note.connectionCount}</span>
-            </div>
+            <ConnectedNotesMenu noteId={note.id} readOnly />
           )}
           <span className="text-xs text-muted-foreground">
             {new Date(note.updatedAt).toLocaleDateString()}

@@ -1,6 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, TrendingUp, Clock, Zap, Loader2, AlertCircle, Link2, Database } from "lucide-react";
+import {
+  Sparkles,
+  TrendingUp,
+  Clock,
+  Zap,
+  Loader2,
+  AlertCircle,
+  Link2,
+  Database,
+} from "lucide-react";
 import { useDashboard } from "../hooks/useDashboard";
 import { SuggestionCard } from "../components/suggestions/SuggestionCard";
 import { features } from "../lib/features";
