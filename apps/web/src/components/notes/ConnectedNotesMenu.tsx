@@ -3,7 +3,13 @@ import { Link2, Trash } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useRelatedNotes, useDeleteConnection } from "../../hooks/useNotes";
 
-export function ConnectedNotesMenu({ noteId }: { noteId: string }) {
+export function ConnectedNotesMenu({
+  noteId,
+  readOnly = false,
+}: {
+  noteId: string;
+  readOnly?: boolean;
+}) {
   const navigate = useNavigate();
   const { data: connections } = useRelatedNotes(noteId);
   const { mutate: removeConnection } = useDeleteConnection(noteId);
@@ -16,7 +22,13 @@ export function ConnectedNotesMenu({ noteId }: { noteId: string }) {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-1 p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+      <MenuButton
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        className="flex items-center gap-1 p-1.5 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      >
         <Link2 size={16} />
         <span className="text-xs font-medium">{connections.length}</span>
       </MenuButton>
@@ -36,17 +48,19 @@ export function ConnectedNotesMenu({ noteId }: { noteId: string }) {
                 >
                   {conn.noteTitle}
                 </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeConnection(conn.id);
-                  }}
-                  className="shrink-0 w-7 flex items-center justify-center text-muted-foreground opacity-0 group-hover/row:opacity-100 hover:text-foreground rounded-xs border border-border/50 p-1 cursor-pointer transition-opacity"
-                  title="Disconnect note"
-                >
-                  <Trash className="h-3 w-3" />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeConnection(conn.id);
+                    }}
+                    className="shrink-0 w-7 flex items-center justify-center text-muted-foreground opacity-0 group-hover/row:opacity-100 hover:text-foreground rounded border border-border/50 p-1 cursor-pointer transition-opacity"
+                    title="Disconnect note"
+                  >
+                    <Trash className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             </MenuItem>
             {connections.length - 1 !== ind && <MenuSeparator className="my-1 h-px bg-border" />}
